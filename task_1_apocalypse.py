@@ -1,3 +1,4 @@
+
 # CPSC 231 Group Project
 #
 # 0 = nothing, first number 1 = pawn, 2 = knight. Second number dictates player 0 = ai, 1 = player
@@ -8,6 +9,7 @@ board = [[20, 10, 10, 10, 20],
          [0, 0, 0, 0, 0],
          [11, 0, 0, 0, 11],
          [21, 11, 11, 11, 21]]
+
 
 def print_board():
     for row in range(0, 5):
@@ -24,9 +26,24 @@ def print_board():
                 print("♘ |", end="")
         print("\n---------------")
 
-print("Welcome to Apocalypse\nThis is a simultaneous turn game that is based upon rules of chess")
+print("""
+   (                         (
+   )\                      ) )\(               (
+((((_)(  `  )   (    (  ( /(((_)\ ) `  )  (   ))\\
+ )\ _ )\ /(/(   )\   )\ )(_))_(()/( /(/(  )\ /((_)
+ (_)_\(_|(_)_\ ((_) ((_|(_)_| |)(_)|(_)_\((_|_))
+  / _ \ | '_ \) _ \/ _|/ _` | | || | '_ \|_-< -_)
+ /_/ \_\| .__/\___/\__|\__,_|_|\_, | .__//__|___|
+        |_|                    |__/|_|
+    """)
+print("Welcome to Apocalypse!!\nThis is a simultaneous turn game which is based upon rules of chess\n")
+
 print_board()
 
-row = input("What row do you choose? (1-5)")
-column = input("What column do you choose? (1-5)")
+row = int(input("What row do you choose? (1-5)"))
+column = int(input("What column do you choose? (1-5)"))
 print("You chose row", row, "column", column)
+
+row_move = int(input("What row do you move to? (1-5)"))
+column_move = int(input("What column do you move to? (1-5)"))
+print("You want to move to row", row_move, "column", column_move)

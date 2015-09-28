@@ -5,7 +5,6 @@ import platform
 #
 # 0 = nothing, first number 1 = pawn, 2 = knight. Second number dictates player 0 = ai, 1 = player
 
-
 board = [[20, 10, 10, 10, 20],
          [10, 0, 0, 0, 10],
          [0, 0, 0, 0, 0],
@@ -54,6 +53,27 @@ def print_board():
 # Stepan's function
 def draw_board():
     print("Drawing board")
+    #Welcome message by Cam.  Task Given:  Add a welcome message to the turtle screen.
+    welcome = turtle.Turtle()
+    welcome2 = turtle.Turtle()
+    height = screen.window_height() #Calculate the height of the canvas
+    ycord = height/2 - (height * 0.035) #Determine the margin for the text to be placed
+    ycord2 = height/2 - (height * 0.055)
+
+    #Hide the turtle, lift the pen up, and increase speed.
+    welcome.hideturtle()
+    welcome.penup()
+    welcome.speed(0)
+
+    welcome2.hideturtle()
+    welcome2.penup()
+    welcome2.speed(0)
+
+    #Position the text accordingly, and display it in the center.
+    welcome.setposition(x=0,y=ycord)
+    welcome.write("Welcome to Apocalypse!!",move=False,align="center",font=("Arial", 18))
+    welcome2.setposition(x=0,y=ycord2)
+    welcome2.write("This is a simultaneous turn game which is based upon rules of chess",move=False,align="center",font=("Arial", 18))
 
     # Initiate turtle that will draw the board
     main_board = turtle.Turtle()

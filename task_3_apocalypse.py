@@ -2,8 +2,8 @@ import turtle
 
 # CPSC 231 Group Project
 
+# Welcome message by Cam.  Task Given:  Add a welcome message to the turtle screen.
 def welcome_text(screen):
-    # Welcome message by Cam.  Task Given:  Add a welcome message to the turtle screen.
 
     welcome = turtle.Turtle()
     welcome2 = turtle.Turtle()

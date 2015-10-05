@@ -230,4 +230,5 @@ def main():
     turtle.done()
 
 # call the main function
-main()
+if __name__ == '__main__':
+    main()

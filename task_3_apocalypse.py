@@ -8,10 +8,10 @@ def welcome_text(screen):
     welcome = turtle.Turtle()
     welcome2 = turtle.Turtle()
     height = screen.window_height() #Calculate the height of the canvas
-    ycord = height/2 - (height * 0.035) #Determine the margin for the text to be placed
+    ycord = height/2 - (height * 0.030) #Determine the margin for the text to be placed
     ycord2 = height/2 - (height * 0.055)
 
-    # Hide the turtle, lift the pen up, and increase speed.
+    # Hide the turtle, lift the pen up, and increase speed
     welcome.hideturtle()
     welcome.penup()
     welcome.speed(0)
@@ -217,8 +217,8 @@ def main():
 
     draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_DIMENSION)
 
-    row = int(input("What row do you choose? (1-5)"))
-    column = int(input("What column do you choose? (1-5)"))
+    row = int(input("What row do you choose? (1-5) "))
+    column = int(input("What column do you choose? (1-5) "))
     print("You chose row", row, "column", column)
 
     row_move = int(input("What row do you move to? (1-5)"))

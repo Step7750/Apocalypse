@@ -450,8 +450,8 @@ def main():
         column_ai = int(input("What column do you choose? (1-5) "))
         print("You chose row", row_ai, "column", column_ai)
 
-        row_move_ai = int(input("What row do you move to? (1-5)"))
-        column_move_ai = int(input("What column do you move to? (1-5)"))
+        row_move_ai = int(input("What row do you move to? (1-5) "))
+        column_move_ai = int(input("What column do you move to? (1-5) "))
         print("You want to move to row", row_move_ai, "column", column_move_ai)
 
         ai_validity = valid_move(board, (row_ai - 1), (column_ai - 1), (row_move_ai - 1), (column_move_ai - 1), "a")

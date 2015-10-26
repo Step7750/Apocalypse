@@ -100,7 +100,7 @@ def draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_D
             char_turtle.color("white")
 
             # get symbol from dict
-            text_to_write = SYMBOL_DICT[board[row][column]]
+            text_to_write = SYMBOL_DICT[get_piece(board, row, column)]
 
             # mac osx and windows have different symbol designs, with diff height/width
             # haven't tested on a Unix system other than Mac OSX, Linux may have a different character set
@@ -160,18 +160,52 @@ def delete_piece(x, y, board, board_turtles):
     # clear any symbols in that location
     cur_turtle.clear()
 
+    return board
+
+
+def get_piece(board_string, row, column):
+    # gets the piece from the board at the specified coord
+    string_array = board_string.split(" ")
+
+    # 5 rows per column
+    row_offset = row * 5
+
+    column_offset = (column + 1)
+
+    # add total offset and remove 1 because computers count from 0
+    total_offset = (2 + row_offset + column_offset) - 1
+
+    return string_array[total_offset]
+
+
+def set_piece(board_string, row, column, new_val):
+    # sets the given piece to a new value
+
+    # 5 rows per column
+    row_offset = row * 5
+
+    column_offset = (column + 1)
+
+    # add total offset and remove 1 because computers count from 0
+    total_offset = (2 + row_offset + column_offset) - 1
+
+    board_string[total_offset] = new_val
+
+    return board_string
+
 
 def main():
 
     # declare all of the main variables
 
-    # Stores the state of the board
-    # 0 = nothing, first number 1 = pawn, 2 = knight. Second number dictates player 0 = ai, 1 = player
-    board = [[20, 10, 10, 10, 20],
-             [10, 0, 0, 0, 10],
-             [0, 0, 0, 0, 0],
-             [11, 0, 0, 0, 11],
-             [21, 11, 11, 11, 21]]
+    # Stores the state of the board in a string, (MOST EFFICIENT METHOD EVER)
+    # first 2 zeroes store the number of illegal moves for each player (player, ai)
+    board = "0 0 " \
+            "K P P P K " \
+            "P W W W P " \
+            "W W W W W " \
+            "p W W W p " \
+            "k p p p k"
 
     # X, Y Coords for each box (to make our lives easier for onclick events)
     box_locations = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
@@ -199,7 +233,7 @@ def main():
     BOARD_DIMENSION = screen.window_width() * 0.75
 
     # dictionary that converts location num to a symbol
-    SYMBOL_DICT = {20: "♞", 10: "♟", 21: "♘", 11: "♙", 0: ""}
+    SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
 
     # print out the "Apocalypse" text
     print("""

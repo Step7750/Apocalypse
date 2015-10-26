@@ -118,24 +118,63 @@ def draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_D
 
 
 # Michael's function
-def move_piece(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION):
+def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION):
     """
-    This function only moves pieces and doesn't apply valid logic whether they should be there
-    This function will only replace what is in the tile
+    This function handles the movement process for both pieces to make sure they are simultaneous
+
+    x2, y2, new_x2, new_y2 is for the AI
+    """
+
+    # check whether the destination is the same for both
+
+    if (new_x == new_x2 and new_y == new_y2):
+        print("Both pieces going to the same location")
+        piece_type1 = get_piece(board, x, y)
+        piece_type2 = get_piece(board, x2, y2)
+        if (piece_type1 == "p" and piece_type2 == "P"):
+            # both pawns, delete both
+            print("Both are pawns, detroying both")
+            board = delete_piece(x, y, board, board_turtles)
+            board = delete_piece(x2, y2, board, board_turtles)
+        elif (piece_type1 == "k" and piece_type2 == "K"):
+            print("Both are knights, detroying both")
+            board = delete_piece(x, y, board, board_turtles)
+            board = delete_piece(x2, y2, board, board_turtles)
+        elif (piece_type1 == "p" and piece_type2 == "K"):
+
+            board = delete_piece(x, y, board, board_turtles)
+            # execute move for AI
+            board = execute_move(x2, y2, new_x2, new_y2, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+        elif (piece_type1 == "k" and piece_type2 == "P"):
+            board = delete_piece(x2, y2, board, board_turtles)
+            # execute move for AI
+            board = execute_move(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+    else:
+        # the pieces are moving to different locations, simultaneous movement does not matter
+        print("Executing moves normally")
+
+        board = execute_move(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+        board = execute_move(x2, y2, new_x2, new_y2, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+
+    return board
+
+
+def execute_move(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION):
+    """
+    Executes a given move, rather than just handling them
+
     """
     print("Moving ", x, y, "to", new_x, new_y)
 
     # replace piece on the board
-    print(board)
+
     board = set_piece(board, new_y, new_x, get_piece(board, y, x))
     #board[new_y][new_x] = board[y][x]
 
     # get piece symbol from the dictionary (based upon board int)
-    print(board)
     symbol = SYMBOL_DICT[get_piece(board, y, x)]
-    print(symbol)
     # call delete piece
-    delete_piece(x, y, board, board_turtles)
+    board = delete_piece(x, y, board, board_turtles)
 
     # Get the turtle stored for the new block
     new_turtle = board_turtles[new_y][new_x]
@@ -145,6 +184,76 @@ def move_piece(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIME
 
     # write out the piece symbol centered in the block in ariel font with a size of the block height/width
     new_turtle.write(symbol, False, align="center", font=("Ariel", int(BOARD_DIMENSION/5)))
+
+    return board
+
+def valid_move(board, x, y, newx, newy, playername):
+    # x, y is current piece that wants to move to newx, newy
+    # playername is p or a depending on player or ai
+    knight_moves = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]
+    if (0 <= x <= 4 and 0 <= y <= 4 and 0 <= newx <= 4 and 0 <= newy <= 4):
+        piece_type = get_piece(board, x, y)
+        new_piece_type = get_piece(board, newx, newy)
+        if piece_type.lower() == "k":
+            print("Knight piece")
+            if ((piece_type == "k" and playername == "p") or (piece_type == "K" and playername == "a")):
+                # make sure they own that piece
+                # see whether it is a valid knight move in the grid
+                for move in knight_moves:
+                    if (x + move[0]) == newx and (y + move[1] == newy):
+                        print("Valid L shape, checking whether they own the outgoing piece")
+                        if (playername == "p"):
+                            if (new_piece_type != "p" and new_piece_type != "k"):
+                                # valid knight move, continue on
+                                return True
+                        elif (playername == "a"):
+                            if (new_piece_type != "P" and new_piece_type != "K"):
+                                # valid knight move, continue on
+                                return True
+                return False
+            else:
+                # they don't own that piece
+                return False
+
+        elif piece_type.lower() == "p":
+            print("pawn piece")
+
+            if ((piece_type == "p" and playername == "p") or (piece_type == "P" and playername == "a")):
+                # they own the pawn piece
+                # check whether it is going diagonal
+                print("Owns piece")
+                print(x, y, newx, newy)
+
+                # whether the pawn is moving upwards or downwards, depending on whether it is the AI or Player
+                if playername == "p":
+                    offset_val = x - 1
+                else:
+                    offset_val = x + 1
+                if (newx == offset_val and newy == (y + 1)) or (newx == offset_val and newy == (y - 1)):
+                    # check whether there is an enemy there
+                    print("Checking diagonal")
+                    if (new_piece_type == "K" or new_piece_type == "P"):
+                        return True
+                    else:
+                        return False
+                elif (newx == offset_val and newy == y):
+                    # check whether it is going forward
+                    # check whether forward is whitespace or not
+                    print("Checking whitespace")
+                    if (new_piece_type == "W"):
+                        return True
+                    else:
+                        return False
+            else:
+                # they don't own that piece
+                return False
+        else:
+            print("Selected white space, invalid")
+            return False
+    else:
+        print("One of the pieces isn't in the range of the board")
+        return False
+
 
 
 # Michael's function
@@ -195,6 +304,62 @@ def set_piece(board_string, row, column, new_val):
     string_array[total_offset] = new_val
 
     return " ".join(string_array)
+
+
+def game_over(board):
+    # checks whether one player won or not, given the game state
+
+    print("Checking whether it is game over or not")
+
+    # returns 1 if the player won, 0 if the AI won, 2 if it is a stalemate
+    # returns 3 if the game is not over
+
+    # check whether one of the players has made two illegal moves
+    if board[0] == "2" and board[2] == "2":
+        return 2
+    elif board[0] == "2":
+        return 0
+    elif board[2] == "2":
+        return 1
+
+    # now check whether one of the players has no pawns left
+    # loop over each pawn
+    pieces = board.split(" ")
+
+    ai_pieces = 0
+    player_pieces = 0
+
+    # don't want to include the first two entries since they define the amount of infractions for that player
+    for piece in pieces[2:]:
+        if (piece == "K" or piece == "P"):
+            ai_pieces += 1
+        elif (piece == "k" or piece == "p"):
+            player_pieces += 1
+
+    if (ai_pieces == 0):
+        return 1
+    elif (player_pieces == 0):
+        return 0
+    else:
+        # the game isn't over
+        return 3
+
+
+def penalty_add(board, player):
+    # this function will add a penalty to the player specified
+    split_board = board.split(" ")
+
+    if player == "p":
+        penalty_index = 0
+    else:
+        penalty_index = 1
+
+    # add one to the penalty, and return the new board
+    cur_val = int(split_board[penalty_index])
+    cur_val += 1
+    split_board[penalty_index] = str(cur_val)
+
+    return " ".join(split_board)
 
 
 def main():
@@ -254,15 +419,61 @@ def main():
 
     draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_DIMENSION)
 
-    row = int(input("What row do you choose? (1-5) "))
-    column = int(input("What column do you choose? (1-5) "))
-    print("You chose row", row, "column", column)
+    # var that stores whether the game ended
+    game_state = 3
+    while game_state == 3:
+        print("For the Player's Turn\n")
 
-    row_move = int(input("What row do you move to? (1-5)"))
-    column_move = int(input("What column do you move to? (1-5)"))
-    print("You want to move to row", row_move, "column", column_move)
+        row = int(input("What row do you choose? (1-5) "))
+        column = int(input("What column do you choose? (1-5) "))
+        print("You chose row", row, "column", column)
 
-    move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+        row_move = int(input("What row do you move to? (1-5)"))
+        column_move = int(input("What column do you move to? (1-5)"))
+        print("You want to move to row", row_move, "column", column_move)
+
+        player_validity = valid_move(board, (row - 1), (column - 1), (row_move - 1), (column_move - 1), "p")
+
+        print("For the AI's Turn\n")
+
+        row_ai = int(input("What row do you choose? (1-5) "))
+        column_ai = int(input("What column do you choose? (1-5) "))
+        print("You chose row", row, "column", column)
+
+        row_move_ai = int(input("What row do you move to? (1-5)"))
+        column_move_ai = int(input("What column do you move to? (1-5)"))
+        print("You want to move to row", row_move, "column", column_move)
+
+        ai_validity = valid_move(board, (row_ai - 1), (column_ai - 1), (row_move_ai - 1), (column_move_ai - 1), "a")
+
+        print(player_validity, ai_validity)
+
+        if player_validity == True and ai_validity == True:
+            board = move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+        elif player_validity == False and ai_validity == True:
+            # add penalty point to player
+            board = penalty_add(board, "p")
+            board = move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+        elif player_validity == True and ai_validity == False:
+            # add penalty point to ai
+            board = penalty_add(board, "a")
+            board = move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+        elif player_validity == False and ai_validity == False:
+            # add penalty points to both
+            board = penalty_add(board, "a")
+            board = penalty_add(board, "p")
+
+        print(board)
+
+        game_state = game_over(board)
+
+    # if it got here, the game has ended, print out who won
+    if game_state == 0:
+        print("AI Won")
+    elif game_state == 1:
+        print("Player Won")
+    else:
+        print("Stalemate")
 
     turtle.done()
 

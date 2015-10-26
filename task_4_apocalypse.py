@@ -234,10 +234,16 @@ def valid_move(board, x, y, newx, newy, playername):
                 if (newx == offset_val and newy == (y + 1)) or (newx == offset_val and newy == (y - 1)):
                     # check whether there is an enemy there
                     print("Checking diagonal")
-                    if (new_piece_type == "K" or new_piece_type == "P"):
-                        return True
-                    else:
-                        return False
+                    if playername == "p":
+                        if (new_piece_type == "K" or new_piece_type == "P"):
+                            return True
+                        else:
+                            return False
+                    elif playername == "a":
+                        if (new_piece_type == "k" or new_piece_type == "p"):
+                            return True
+                        else:
+                            return False
                 elif (newx == offset_val and newy == y):
                     # check whether it is going forward
                     # check whether forward is whitespace or not
@@ -246,6 +252,8 @@ def valid_move(board, x, y, newx, newy, playername):
                         return True
                     else:
                         return False
+                else:
+                    return False
             else:
                 # they don't own that piece
                 return False
@@ -424,7 +432,7 @@ def main():
     # var that stores whether the game ended
     game_state = 3
     while game_state == 3:
-        print("For the Player's Turn\n")
+        print("\nFor the Player's Turn\n")
 
         row = int(input("What row do you choose? (1-5) "))
         column = int(input("What column do you choose? (1-5) "))
@@ -436,15 +444,15 @@ def main():
 
         player_validity = valid_move(board, (row - 1), (column - 1), (row_move - 1), (column_move - 1), "p")
 
-        print("For the AI's Turn\n")
+        print("\nFor the AI's Turn\n")
 
         row_ai = int(input("What row do you choose? (1-5) "))
         column_ai = int(input("What column do you choose? (1-5) "))
-        print("You chose row", row, "column", column)
+        print("You chose row", row_ai, "column", column_ai)
 
         row_move_ai = int(input("What row do you move to? (1-5)"))
         column_move_ai = int(input("What column do you move to? (1-5)"))
-        print("You want to move to row", row_move, "column", column_move)
+        print("You want to move to row", row_move_ai, "column", column_move_ai)
 
         ai_validity = valid_move(board, (row_ai - 1), (column_ai - 1), (row_move_ai - 1), (column_move_ai - 1), "a")
 

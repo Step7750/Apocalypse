@@ -126,11 +126,14 @@ def move_piece(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIME
     print("Moving ", x, y, "to", new_x, new_y)
 
     # replace piece on the board
-    board[new_y][new_x] = board[y][x]
+    print(board)
+    board = set_piece(board, new_y, new_x, get_piece(board, y, x))
+    #board[new_y][new_x] = board[y][x]
 
     # get piece symbol from the dictionary (based upon board int)
-    symbol = SYMBOL_DICT[board[y][x]]
-
+    print(board)
+    symbol = SYMBOL_DICT[get_piece(board, y, x)]
+    print(symbol)
     # call delete piece
     delete_piece(x, y, board, board_turtles)
 
@@ -154,8 +157,8 @@ def delete_piece(x, y, board, board_turtles):
     # get the turtle at x, y
     cur_turtle = board_turtles[y][x]
 
-    # set the state of the board at that location to 0
-    board[y][x] = 0
+    # set the state of the board at that location to W
+    board = set_piece(board, y, x, "W")
 
     # clear any symbols in that location
     cur_turtle.clear()
@@ -180,7 +183,7 @@ def get_piece(board_string, row, column):
 
 def set_piece(board_string, row, column, new_val):
     # sets the given piece to a new value
-
+    string_array = board_string.split(" ")
     # 5 rows per column
     row_offset = row * 5
 
@@ -189,9 +192,9 @@ def set_piece(board_string, row, column, new_val):
     # add total offset and remove 1 because computers count from 0
     total_offset = (2 + row_offset + column_offset) - 1
 
-    board_string[total_offset] = new_val
+    string_array[total_offset] = new_val
 
-    return board_string
+    return " ".join(string_array)
 
 
 def main():
@@ -206,6 +209,7 @@ def main():
             "W W W W W " \
             "p W W W p " \
             "k p p p k"
+
 
     # X, Y Coords for each box (to make our lives easier for onclick events)
     box_locations = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],

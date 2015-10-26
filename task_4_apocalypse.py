@@ -129,8 +129,8 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2, board, board_turtles,
 
     if (new_x == new_x2 and new_y == new_y2):
         print("Both pieces going to the same location")
-        piece_type1 = get_piece(board, x, y)
-        piece_type2 = get_piece(board, x2, y2)
+        piece_type1 = get_piece(board, y, x)
+        piece_type2 = get_piece(board, y2, x2)
         if (piece_type1 == "p" and piece_type2 == "P"):
             # both pawns, delete both
             print("Both are pawns, detroying both")
@@ -152,9 +152,10 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2, board, board_turtles,
     else:
         # the pieces are moving to different locations, simultaneous movement does not matter
         print("Executing moves normally")
-
-        board = execute_move(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
-        board = execute_move(x2, y2, new_x2, new_y2, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+        if (x != -1):
+            board = execute_move(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+        if (x2 != -1):
+            board = execute_move(x2, y2, new_x2, new_y2, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
 
     return board
 
@@ -186,6 +187,7 @@ def execute_move(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DI
     new_turtle.write(symbol, False, align="center", font=("Ariel", int(BOARD_DIMENSION/5)))
 
     return board
+
 
 def valid_move(board, x, y, newx, newy, playername):
     # x, y is current piece that wants to move to newx, newy
@@ -449,15 +451,15 @@ def main():
         print(player_validity, ai_validity)
 
         if player_validity == True and ai_validity == True:
-            board = move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+            board = move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), (column_ai - 1), (row_ai - 1), (column_move_ai - 1), (row_move_ai - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
         elif player_validity == False and ai_validity == True:
             # add penalty point to player
             board = penalty_add(board, "p")
-            board = move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+            board = move_piece(-1, 0, 0, 0, (column_ai - 1), (row_ai - 1), (column_move_ai - 1), (row_move_ai - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
         elif player_validity == True and ai_validity == False:
             # add penalty point to ai
             board = penalty_add(board, "a")
-            board = move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+            board = move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), -1, 0, 0, 0, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
         elif player_validity == False and ai_validity == False:
             # add penalty points to both
             board = penalty_add(board, "a")

@@ -115,6 +115,8 @@ def draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_D
 
         # reset x position each time a row is done (to the very left), move the turtle down one block
         main_board.setpos(-(BOARD_DIMENSION/2) - 10, (main_board.ycor() - (BOARD_DIMENSION/5)))
+        
+    return box_locations
 
 
 # Michael's function
@@ -427,7 +429,7 @@ def main():
         """)
     print("Welcome to Apocalypse!!\nThis is a simultaneous turn game which is based upon rules of chess\n")
 
-    draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_DIMENSION)
+    box_locations = draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_DIMENSION)
 
     # var that stores whether the game ended
     game_state = 3

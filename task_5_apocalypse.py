@@ -455,7 +455,6 @@ def clicky(x, y):
         selected_turtle._tracer(False)
         selected_turtle.hideturtle()
         selected_turtle.color("#007AFF")
-        selected_turtle.speed(0)
 
         row = 0
         column = 0

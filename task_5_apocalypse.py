@@ -41,6 +41,11 @@ BOARD_DIMENSION = screen.window_width() * 0.75
 # dictionary that converts location num to a symbol
 SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
 
+# store the state of the highlighting of boxes
+
+highlight_params = [0, 0, 0]
+box_selected = 0
+
 
 # CPSC 231 Group Project
 
@@ -89,7 +94,10 @@ def draw_board():
     main_board.up()
     # set color to something a bit lighter than background
     main_board.color("#5E5E5E")
-    main_board.speed(0)
+    main_board.hideturtle()
+    #main_board.speed(0)
+    # disable animations, this got really annoying
+    main_board._tracer(False)
 
     # center the board, -10 is a static offset
     main_board.goto(-(BOARD_DIMENSION/2) - 10, BOARD_DIMENSION/2)
@@ -138,7 +146,7 @@ def draw_board():
             # create new turtle just for the character, and store it in the array board_turtles
             char_turtle = turtle.Turtle()
             char_turtle.hideturtle()
-            char_turtle.speed(0)
+            char_turtle._tracer(False)
 
             char_turtle.up()
             char_turtle.setx(main_board.xcor() + (BOARD_DIMENSION/10))
@@ -417,10 +425,82 @@ def penalty_add(player):
     return " ".join(split_board)
 
 
-def handle_click(*args):
-    #alrighty
-    print(args)
+def clicky(x, y):
+    # its a good name, isn't it?
 
+    # check whether they clicked inside the board
+    if box_locations[0][0][0] < x < (box_locations[4][4][0] + BOARD_DIMENSION/5) and (box_locations[4][4][1] - BOARD_DIMENSION/5) < y < box_locations[0][0][1]:
+        # they clicked inside, let's go!
+        print("Clicked inside the game board")
+
+        global highlight_params, box_selected
+
+        if highlight_params[0] != 0:
+            # already selected
+            highlight_params[0].clear()
+
+        selected_turtle = turtle.Turtle()
+
+        highlight_params[0] = selected_turtle
+        selected_turtle._tracer(False)
+        selected_turtle.hideturtle()
+        selected_turtle.color("#007AFF")
+        selected_turtle.speed(0)
+
+        row = 0
+        column = 0
+
+        for n in box_locations:
+            row += 1
+            for i in n:
+                column += 1
+                #print(i[0], i[1])
+
+                if (i[0] + (BOARD_DIMENSION/5)) > x > i[0] and i[1] > y > (i[1] - (BOARD_DIMENSION/5)):
+
+                    print("Hit button  Row", row, "Column", column)
+                    print(highlight_params[1], highlight_params[2], column, row)
+
+                    if column != highlight_params[1] or row != highlight_params[2]:
+
+                        if box_selected == 1:
+                            # move the piece, a move was made
+                            print("Move piece")
+                            # move the piece here, generate an AI move
+                            box_selected = 0
+                            highlight_params[0] = 0
+                            highlight_params[1] = 0
+                            highlight_params[2] = 0
+
+                        elif get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p":
+                            # only let the user select tiles it owns
+                            selected_turtle.up()
+                            selected_turtle.goto(i[0], i[1])
+                            selected_turtle.down()
+                            for i2 in range(4):
+                                selected_turtle.forward(BOARD_DIMENSION/5)
+                                selected_turtle.right(90)
+                            selected_turtle.up()
+                            box_selected = 1
+
+                            # save x y coords from the turtle for future reference
+                            highlight_params[1] = column
+                            highlight_params[2] = row
+                    else:
+                        print("deselected same box")
+                        highlight_params[0] = 0
+                        highlight_params[1] = 0
+                        highlight_params[2] = 0
+                        box_selected = 0
+
+            column = 0
+    else:
+        print("Didn't click inside the board")
+
+
+def ai_move():
+    # this function figures out what valid move the AI should make
+    print("Generating AI move")
 
 def main():
 
@@ -442,10 +522,10 @@ def main():
 
     draw_board()
 
-    #screen.onclick(handle_click)
+    screen.onclick(clicky)
 
     # var that stores whether the game ended
-
+    """
     game_state = 3
     while game_state == 3:
         print("\nFor the Player's Turn\n")
@@ -500,7 +580,7 @@ def main():
         print("Player Won")
     else:
         print("Stalemate")
-
+    """
     turtle.done()
 
 # call the main function

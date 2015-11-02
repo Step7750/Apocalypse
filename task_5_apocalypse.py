@@ -1,5 +1,47 @@
 import turtle
 
+
+# declare all of the main variables
+
+# Stores the state of the board in a string, (MOST EFFICIENT METHOD EVER)
+# first 2 zeroes store the number of illegal moves for each player (player, ai)
+board = "0 0 " \
+        "K P P P K " \
+        "P W W W P " \
+        "W W W W W " \
+        "p W W W p " \
+        "k p p p k"
+
+
+# X, Y Coords for each box (to make our lives easier for onclick events)
+box_locations = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                 [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                 [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                 [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+                 [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]]
+
+
+# store individual turtle objects for each position on the board (makes editing easier)
+board_turtles = [[0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0]]
+
+# Initiate the screen with bgcolor
+screen = turtle.Screen()
+screen.bgcolor("#4A4A4A")
+
+
+# Constants created by Khesualdo, they store the appropriate board dimensions and a dict defining the conversion from int to symbol
+
+# width of the board is equal to 75% of the screen width
+BOARD_DIMENSION = screen.window_width() * 0.75
+
+# dictionary that converts location num to a symbol
+SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
+
+
 # CPSC 231 Group Project
 
 # Welcome message by Cam.  Task Given:  Add a welcome message to the turtle screen.
@@ -29,10 +71,13 @@ def welcome_text(screen):
 
 
 # Stepan's function
-def draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_DIMENSION):
+def draw_board():
     """
     This function will draw the game board onto the screen based upon the constants BOARD_DIMENSION and SYMBOL_DICT
     """
+
+    # want to edit the global variables
+    global box_locations, board_turtles
 
     # Execute Cam's function to draw the welcome text
     welcome_text(screen)
@@ -100,7 +145,7 @@ def draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_D
             char_turtle.color("white")
 
             # get symbol from dict
-            text_to_write = SYMBOL_DICT[get_piece(board, row, column)]
+            text_to_write = SYMBOL_DICT[get_piece(row, column)]
 
             # mac osx and windows have different symbol designs, with diff height/width
             # haven't tested on a Unix system other than Mac OSX, Linux may have a different character set
@@ -116,66 +161,65 @@ def draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_D
         # reset x position each time a row is done (to the very left), move the turtle down one block
         main_board.setpos(-(BOARD_DIMENSION/2) - 10, (main_board.ycor() - (BOARD_DIMENSION/5)))
 
-    return box_locations
-
 
 # Michael's function
-def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION):
+def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     """
     This function handles the movement process for both pieces to make sure they are simultaneous
 
     x2, y2, new_x2, new_y2 is for the AI
     """
-
+    global board
     # check whether the destination is the same for both
 
-    if (new_x == new_x2 and new_y == new_y2):
+    if new_x == new_x2 and new_y == new_y2:
         print("Both pieces going to the same location")
-        piece_type1 = get_piece(board, y, x)
-        piece_type2 = get_piece(board, y2, x2)
-        if (piece_type1 == "p" and piece_type2 == "P"):
+        piece_type1 = get_piece(y, x)
+        piece_type2 = get_piece(y2, x2)
+        if piece_type1 == "p" and piece_type2 == "P":
             # both pawns, delete both
             print("Both are pawns, detroying both")
             board = delete_piece(x, y, board, board_turtles)
             board = delete_piece(x2, y2, board, board_turtles)
-        elif (piece_type1 == "k" and piece_type2 == "K"):
+        elif piece_type1 == "k" and piece_type2 == "K":
             print("Both are knights, detroying both")
             board = delete_piece(x, y, board, board_turtles)
             board = delete_piece(x2, y2, board, board_turtles)
-        elif (piece_type1 == "p" and piece_type2 == "K"):
+        elif piece_type1 == "p" and piece_type2 == "K":
 
             board = delete_piece(x, y, board, board_turtles)
             # execute move for AI
-            board = execute_move(x2, y2, new_x2, new_y2, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
-        elif (piece_type1 == "k" and piece_type2 == "P"):
+            board = execute_move(x2, y2, new_x2, new_y2)
+        elif piece_type1 == "k" and piece_type2 == "P":
             board = delete_piece(x2, y2, board, board_turtles)
             # execute move for AI
-            board = execute_move(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+            board = execute_move(x, y, new_x, new_y)
     else:
         # the pieces are moving to different locations, simultaneous movement does not matter
         print("Executing moves normally")
         if (x != -1):
-            board = execute_move(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+            board = execute_move(x, y, new_x, new_y)
         if (x2 != -1):
-            board = execute_move(x2, y2, new_x2, new_y2, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
-
-    return board
+            board = execute_move(x2, y2, new_x2, new_y2)
 
 
-def execute_move(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION):
+def execute_move(x, y, new_x, new_y):
     """
     Executes a given move, rather than just handling them
 
     """
+
+    global board
+
     print("Moving ", x, y, "to", new_x, new_y)
 
     # replace piece on the board
 
-    board = set_piece(board, new_y, new_x, get_piece(board, y, x))
+    board = set_piece(board, new_y, new_x, get_piece(y, x))
     #board[new_y][new_x] = board[y][x]
 
     # get piece symbol from the dictionary (based upon board int)
-    symbol = SYMBOL_DICT[get_piece(board, y, x)]
+    symbol = SYMBOL_DICT[get_piece(y, x)]
     # call delete piece
     board = delete_piece(x, y, board, board_turtles)
 
@@ -191,13 +235,13 @@ def execute_move(x, y, new_x, new_y, board, board_turtles, SYMBOL_DICT, BOARD_DI
     return board
 
 
-def valid_move(board, x, y, newx, newy, playername):
+def valid_move(x, y, newx, newy, playername):
     # x, y is current piece that wants to move to newx, newy
     # playername is p or a depending on player or ai
     knight_moves = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]
     if (0 <= x <= 4 and 0 <= y <= 4 and 0 <= newx <= 4 and 0 <= newy <= 4):
-        piece_type = get_piece(board, x, y)
-        new_piece_type = get_piece(board, newx, newy)
+        piece_type = get_piece(x, y)
+        new_piece_type = get_piece(newx, newy)
         if piece_type.lower() == "k":
             print("Knight piece")
             if ((piece_type == "k" and playername == "p") or (piece_type == "K" and playername == "a")):
@@ -287,9 +331,9 @@ def delete_piece(x, y, board, board_turtles):
     return board
 
 
-def get_piece(board_string, row, column):
+def get_piece(row, column):
     # gets the piece from the board at the specified coord
-    string_array = board_string.split(" ")
+    string_array = board.split(" ")
 
     # 5 rows per column
     row_offset = row * 5
@@ -318,9 +362,8 @@ def set_piece(board_string, row, column, new_val):
     return " ".join(string_array)
 
 
-def game_over(board):
+def game_over():
     # checks whether one player won or not, given the game state
-
     print("Checking whether it is game over or not")
 
     # returns 1 if the player won, 0 if the AI won, 2 if it is a stalemate
@@ -357,7 +400,7 @@ def game_over(board):
         return 3
 
 
-def penalty_add(board, player):
+def penalty_add(player):
     # this function will add a penalty to the player specified
     split_board = board.split(" ")
 
@@ -374,47 +417,15 @@ def penalty_add(board, player):
     return " ".join(split_board)
 
 
+def handle_click(*args):
+    #alrighty
+    print(args)
+
+
 def main():
 
-    # declare all of the main variables
-
-    # Stores the state of the board in a string, (MOST EFFICIENT METHOD EVER)
-    # first 2 zeroes store the number of illegal moves for each player (player, ai)
-    board = "0 0 " \
-            "K P P P K " \
-            "P W W W P " \
-            "W W W W W " \
-            "p W W W p " \
-            "k p p p k"
-
-
-    # X, Y Coords for each box (to make our lives easier for onclick events)
-    box_locations = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                     [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                     [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                     [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-                     [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]]
-
-
-    # store individual turtle objects for each position on the board (makes editing easier)
-    board_turtles = [[0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0]]
-
-    # Initiate the screen with bgcolor
-    screen = turtle.Screen()
-    screen.bgcolor("#4A4A4A")
-
-
-    # Constants created by Khesualdo, they store the appropriate board dimensions and a dict defining the conversion from int to symbol
-
-    # width of the board is equal to 75% of the screen width
-    BOARD_DIMENSION = screen.window_width() * 0.75
-
-    # dictionary that converts location num to a symbol
-    SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
+    # want to edit the global copy
+    global board
 
     # print out the "Apocalypse" text
     print("""
@@ -429,9 +440,12 @@ def main():
         """)
     print("Welcome to Apocalypse!!\nThis is a simultaneous turn game which is based upon rules of chess\n")
 
-    box_locations = draw_board(board, board_turtles, box_locations, screen, SYMBOL_DICT, BOARD_DIMENSION)
+    draw_board()
+
+    #screen.onclick(handle_click)
 
     # var that stores whether the game ended
+
     game_state = 3
     while game_state == 3:
         print("\nFor the Player's Turn\n")
@@ -444,7 +458,7 @@ def main():
         column_move = int(input("What column do you move to? (1-5)"))
         print("You want to move to row", row_move, "column", column_move)
 
-        player_validity = valid_move(board, (row - 1), (column - 1), (row_move - 1), (column_move - 1), "p")
+        player_validity = valid_move((row - 1), (column - 1), (row_move - 1), (column_move - 1), "p")
 
         print("\nFor the AI's Turn\n")
 
@@ -456,28 +470,28 @@ def main():
         column_move_ai = int(input("What column do you move to? (1-5) "))
         print("You want to move to row", row_move_ai, "column", column_move_ai)
 
-        ai_validity = valid_move(board, (row_ai - 1), (column_ai - 1), (row_move_ai - 1), (column_move_ai - 1), "a")
+        ai_validity = valid_move((row_ai - 1), (column_ai - 1), (row_move_ai - 1), (column_move_ai - 1), "a")
 
         print(player_validity, ai_validity)
 
         if player_validity == True and ai_validity == True:
-            board = move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), (column_ai - 1), (row_ai - 1), (column_move_ai - 1), (row_move_ai - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+            move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), (column_ai - 1), (row_ai - 1), (column_move_ai - 1), (row_move_ai - 1))
         elif player_validity == False and ai_validity == True:
             # add penalty point to player
-            board = penalty_add(board, "p")
-            board = move_piece(-1, 0, 0, 0, (column_ai - 1), (row_ai - 1), (column_move_ai - 1), (row_move_ai - 1), board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+            board = penalty_add("p")
+            move_piece(-1, 0, 0, 0, (column_ai - 1), (row_ai - 1), (column_move_ai - 1), (row_move_ai - 1))
         elif player_validity == True and ai_validity == False:
             # add penalty point to ai
-            board = penalty_add(board, "a")
-            board = move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), -1, 0, 0, 0, board, board_turtles, SYMBOL_DICT, BOARD_DIMENSION)
+            board = penalty_add("a")
+            move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), -1, 0, 0, 0)
         elif player_validity == False and ai_validity == False:
             # add penalty points to both
-            board = penalty_add(board, "a")
-            board = penalty_add(board, "p")
+            board = penalty_add("a")
+            board = penalty_add("p")
 
         print(board)
 
-        game_state = game_over(board)
+        game_state = game_over()
 
     # if it got here, the game has ended, print out who won
     if game_state == 0:

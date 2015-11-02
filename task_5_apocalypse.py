@@ -627,65 +627,9 @@ def main():
 
     draw_board()
 
+    # bind the event handler
     screen.onclick(clicky)
 
-    # var that stores whether the game ended
-    """
-    game_state = 3
-    while game_state == 3:
-        print("\nFor the Player's Turn\n")
-
-        row = int(input("What row do you choose? (1-5) "))
-        column = int(input("What column do you choose? (1-5) "))
-        print("You chose row", row, "column", column)
-
-        row_move = int(input("What row do you move to? (1-5)"))
-        column_move = int(input("What column do you move to? (1-5)"))
-        print("You want to move to row", row_move, "column", column_move)
-
-        player_validity = valid_move((row - 1), (column - 1), (row_move - 1), (column_move - 1), "p")
-
-        print("\nFor the AI's Turn\n")
-
-        row_ai = int(input("What row do you choose? (1-5) "))
-        column_ai = int(input("What column do you choose? (1-5) "))
-        print("You chose row", row_ai, "column", column_ai)
-
-        row_move_ai = int(input("What row do you move to? (1-5) "))
-        column_move_ai = int(input("What column do you move to? (1-5) "))
-        print("You want to move to row", row_move_ai, "column", column_move_ai)
-
-        ai_validity = valid_move((row_ai - 1), (column_ai - 1), (row_move_ai - 1), (column_move_ai - 1), "a")
-
-        print(player_validity, ai_validity)
-
-        if player_validity == True and ai_validity == True:
-            move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), (column_ai - 1), (row_ai - 1), (column_move_ai - 1), (row_move_ai - 1))
-        elif player_validity == False and ai_validity == True:
-            # add penalty point to player
-            board = penalty_add("p")
-            move_piece(-1, 0, 0, 0, (column_ai - 1), (row_ai - 1), (column_move_ai - 1), (row_move_ai - 1))
-        elif player_validity == True and ai_validity == False:
-            # add penalty point to ai
-            board = penalty_add("a")
-            move_piece((column - 1), (row - 1), (column_move - 1), (row_move - 1), -1, 0, 0, 0)
-        elif player_validity == False and ai_validity == False:
-            # add penalty points to both
-            board = penalty_add("a")
-            board = penalty_add("p")
-
-        print(board)
-
-        game_state = game_over()
-
-    # if it got here, the game has ended, print out who won
-    if game_state == 0:
-        print("AI Won")
-    elif game_state == 1:
-        print("Player Won")
-    else:
-        print("Stalemate")
-    """
     turtle.done()
 
 # call the main function

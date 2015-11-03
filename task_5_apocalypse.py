@@ -610,20 +610,19 @@ def main():
 
     # want to edit the global copy
     global board
-
+    
     # print out the "Apocalypse" text
     print("""
        (                         (
-       )\                      ) )\(               (
-    ((((_)(  `  )   (    (  ( /(((_)\ ) `  )  (   ))\\
-     )\ _ )\ /(/(   )\   )\ )(_))_(()/( /(/(  )\ /((_)
-     (_)_\(_|(_)_\ ((_) ((_|(_)_| |)(_)|(_)_\((_|_))
+       )\                      ) )\(              (
+    ((((_)(  `  )  (    (  ( /(((_)\ ) `  )  (    ))\\
+     )\ _ )\ /(/(  )\   )\ )(_) )_(()/( /(/(  )\  /((_)
+     (_)_\(_|(_)_\((_) ((_| (_)_| |(_)|(_)_\((__|__))
       / _ \ | '_ \) _ \/ _|/ _` | | || | '_ \|_-< -_)
      /_/ \_\| .__/\___/\__|\__,_|_|\_, | .__//__|___|
             |_|                    |__/|_|
         """)
     print("Welcome to Apocalypse!!\nThis is a simultaneous turn game which is based upon rules of chess\n")
-
     draw_board()
 
     # bind the event handler

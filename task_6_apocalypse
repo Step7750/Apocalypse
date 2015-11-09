@@ -48,19 +48,15 @@ SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
 highlight_params = [0, 0, 0]
 box_selected = 0
 
-
-# CPSC 231 Group Project
-
-# Welcome message by Cam.  Task Given:  Add a welcome message to the turtle screen.
+# Welcome message
 def welcome_text(screen):
 
     welcome = turtle.Turtle()
     welcome2 = turtle.Turtle()
-    height = screen.window_height() #Calculate the height of the canvas
-    ycord = height/2 - (height * 0.030) #Determine the margin for the text to be placed
+    height = screen.window_height() 
+    ycord = height/2 - (height * 0.030) 
     ycord2 = height/2 - (height * 0.055)
 
-    # Hide the turtle, lift the pen up, and increase speed
     welcome.hideturtle()
     welcome.penup()
     welcome.speed(0)
@@ -69,7 +65,6 @@ def welcome_text(screen):
     welcome2.penup()
     welcome2.speed(0)
 
-    # Position the text accordingly, and display it in the center.
     welcome.setposition(x=0, y=ycord)
     welcome.write("Welcome to Apocalypse!!", move=False, align="center", font=("Arial", 18))
     welcome2.setposition(x=0, y=ycord2)
@@ -77,7 +72,7 @@ def welcome_text(screen):
                    font=("Arial", 18))
 
 
-# Stepan's function
+# Draw's the board
 def draw_board():
     """
     This function will draw the game board onto the screen based upon the constants BOARD_DIMENSION and SYMBOL_DICT
@@ -172,7 +167,7 @@ def draw_board():
         main_board.setpos(-(BOARD_DIMENSION/2) - 10, (main_board.ycor() - (BOARD_DIMENSION/5)))
 
 
-# Michael's function
+# Select pieces to move
 def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     global board
     # check whether the destination is the same for both
@@ -215,6 +210,8 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
             # since this is the second move,
             board = execute_move(x2, y2, new_x2, new_y2, ai_pawn)
 
+
+# Moves selected pieces
 def execute_move(x, y, new_x, new_y, symbol):
 
     global board
@@ -244,6 +241,7 @@ def execute_move(x, y, new_x, new_y, symbol):
     return board
 
 
+# Validates a move
 def valid_move(x, y, newx, newy, playername):
     # x, y is current piece that wants to move to newx, newy
     # playername is p or a depending on player or ai
@@ -320,8 +318,7 @@ def valid_move(x, y, newx, newy, playername):
         return False
 
 
-
-# Michael's function
+# Deletes a losing piece
 def delete_piece(x, y, board, board_turtles):
     print("Deleting ", x, y)
 
@@ -337,30 +334,18 @@ def delete_piece(x, y, board, board_turtles):
     return board
 
 
+# Really dont want to re-write stuff, so left it here.
 def get_piece(row, column):
-    # 5 rows per column
-    row_offset = row
-
-    column_offset = column
     return board[row][column]
 
 
+# Not sure tbh
 def set_piece(board_string, row, column, new_val):
-    # 5 rows per column
-    row_offset = row * 5
-
-    column_offset = (column + 1)
-
-    # add total offset and remove 1 because computers count from 0
-    total_offset = (2 + row_offset + column_offset) - 1
-
-    board[row][column] = new_val
-
     return board
 
 
+# Depicts whether the game ends or continues
 def game_over():
-    # checks whether one player won or not, given the game state
     print("Checking whether it is game over or not")
 
     # returns 1 if the player won, 0 if the AI won, 2 if it is a stalemate
@@ -397,8 +382,8 @@ def game_over():
         return 3
 
 
+# Adds penalty points to player/AI
 def penalty_add(player):
-    # this function will add a penalty to the player specified
     split_board = penaltyScore.split(" ")
 
     if player == "p":
@@ -414,10 +399,8 @@ def penalty_add(player):
     return " ".join(split_board)
 
 
+# Kick-ass name.  Allows clicking in GUI for simplistic user-control.
 def clicky(x, y):
-    # its a good name, isn't it?
-
-    # check whether they clicked inside the board
     if box_locations[0][0][0] < x < (box_locations[4][4][0] + BOARD_DIMENSION/5) and (box_locations[4][4][1] - BOARD_DIMENSION/5) < y < box_locations[0][0][1]:
         # they clicked inside, let's go!
         print("Clicked inside the game board")
@@ -519,9 +502,8 @@ def clicky(x, y):
         print("Didn't click inside the board")
 
 
+# Depicts the AI's movement.  Is usually stupid, but sometimes wins.
 def ai_move():
-    # this function figures out what valid move the AI should make
-    # this is also a very stupid ai
 
     print("Generating AI move")
 
@@ -565,6 +547,7 @@ def ai_move():
     return False
 
 
+# Displays the winner at the end of the game
 def game_end_screen(winner):
     turtle.clearscreen()
     screen.bgcolor("#4A4A4A")
@@ -582,7 +565,6 @@ def game_end_screen(winner):
     end_turtle._tracer(False)
     # the font size is just a relative static value to make sure it is proportionate
     end_turtle.write(text_write, move=False, align="center", font=("Arial", int(BOARD_DIMENSION/10)))
-
 
 
 def main():

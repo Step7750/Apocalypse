@@ -6,11 +6,13 @@ import turtle
 # Stores the state of the board in a string, (MOST EFFICIENT METHOD EVER)
 # first 2 zeroes store the number of illegal moves for each player (player, ai)
 
-board = [['K', 'P', 'P', 'P', 'K'],
-        ['P', 'W', 'W', 'W', 'P'],
-        ['W', 'W', 'W', 'W', 'W'],
-        ['p', 'W', 'W', 'W', 'p'],
-        ['k', 'p', 'p', 'p', 'k']]
+board = [["K", "P", "P", "P", "K"], 
+["P", "W", "W", "W", "P"], 
+["W", "W", "W", "W", "W"], 
+["p", "W", "W", "W", "p"], 
+["k", "p", "p", "p", "k"]]
+
+penaltyScore = "0 0"
 
 
 # X, Y Coords for each box (to make our lives easier for onclick events)
@@ -172,11 +174,6 @@ def draw_board():
 
 # Michael's function
 def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
-    """
-    This function handles the movement process for both pieces to make sure they are simultaneous
-
-    x2, y2, new_x2, new_y2 is for the AI
-    """
     global board
     # check whether the destination is the same for both
 
@@ -218,12 +215,7 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
             # since this is the second move,
             board = execute_move(x2, y2, new_x2, new_y2, ai_pawn)
 
-
 def execute_move(x, y, new_x, new_y, symbol):
-    """
-    Executes a given move, rather than just handling them
-
-    """
 
     global board
 
@@ -233,7 +225,6 @@ def execute_move(x, y, new_x, new_y, symbol):
 
     board = set_piece(board, new_y, new_x, get_piece(y, x))
     #board[new_y][new_x] = board[y][x]
-
 
     # check the saved symbol is the same as the current piece on the board at that location, make sure we don't delete it
     test_symbol = SYMBOL_DICT[get_piece(y, x)]
@@ -332,9 +323,6 @@ def valid_move(x, y, newx, newy, playername):
 
 # Michael's function
 def delete_piece(x, y, board, board_turtles):
-    """
-    This function will remove a board piece, and do the proper logic to remove the current location of it
-    """
     print("Deleting ", x, y)
 
     # get the turtle at x, y
@@ -350,23 +338,14 @@ def delete_piece(x, y, board, board_turtles):
 
 
 def get_piece(row, column):
-    # gets the piece from the board at the specified coord
-    string_array = board
-
     # 5 rows per column
-    row_offset = row * 5
+    row_offset = row
 
-    column_offset = (column + 1)
-
-    # add total offset and remove 1 because computers count from 0
-    total_offset = (2 + row_offset + column_offset) - 1
-
-    return string_array[total_offset]
+    column_offset = column
+    return board[row][column]
 
 
 def set_piece(board_string, row, column, new_val):
-    # sets the given piece to a new value
-    string_array = board_string.split(" ")
     # 5 rows per column
     row_offset = row * 5
 
@@ -375,9 +354,9 @@ def set_piece(board_string, row, column, new_val):
     # add total offset and remove 1 because computers count from 0
     total_offset = (2 + row_offset + column_offset) - 1
 
-    string_array[total_offset] = new_val
+    board[row][column] = new_val
 
-    return " ".join(string_array)
+    return board
 
 
 def game_over():
@@ -403,7 +382,7 @@ def game_over():
     player_pieces = 0
 
     # don't want to include the first two entries since they define the amount of infractions for that player
-    for piece in pieces[2:]:
+    for piece in pieces[0][0]:
         if (piece == "K" or piece == "P"):
             ai_pieces += 1
         elif (piece == "k" or piece == "p"):
@@ -420,7 +399,7 @@ def game_over():
 
 def penalty_add(player):
     # this function will add a penalty to the player specified
-    split_board = board
+    split_board = penaltyScore.split(" ")
 
     if player == "p":
         penalty_index = 0
@@ -610,20 +589,19 @@ def main():
 
     # want to edit the global copy
     global board
-
+    
     # print out the "Apocalypse" text
     print("""
        (                         (
        )\                      ) )\(              (
     ((((_)(  `  )  (    (  ( /(((_)\ ) `  )  (    ))\\
-     )\ _ )\ /(/(  )\   )\ )(_))_(()/( /(/(  )\  /((_)
+     )\ _ )\ /(/(  )\   )\ )(_) )_(()/( /(/(  )\  /((_)
      (_)_\(_|(_)_\((_) ((_| (_)_| |(_)|(_)_\((__|__))
       / _ \ | '_ \) _ \/ _|/ _` | | || | '_ \|_-< -_)
      /_/ \_\| .__/\___/\__|\__,_|_|\_, | .__//__|___|
             |_|                    |__/|_|
         """)
     print("Welcome to Apocalypse!!\nThis is a simultaneous turn game which is based upon rules of chess\n")
-
     draw_board()
 
     # bind the event handler

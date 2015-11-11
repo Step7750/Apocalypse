@@ -1,5 +1,6 @@
 import turtle
 
+# I just played the game a bit and there are a shit ton of bugs, please find and fix them (game logic bugs)
 
 # declare all of the main variables
 

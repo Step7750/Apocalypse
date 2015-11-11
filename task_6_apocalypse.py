@@ -5,12 +5,14 @@ import turtle
 
 # Stores the state of the board in a string, (MOST EFFICIENT METHOD EVER)
 # first 2 zeroes store the number of illegal moves for each player (player, ai)
-board = "0 0 " \
-        "K P P P K " \
-        "P W W W P " \
-        "W W W W W " \
-        "p W W W p " \
-        "k p p p k"
+board = [["K", "P", "P", "P", "K"],
+        ["P", "W", "W", "W", "P"],
+        ["W", "W", "W", "W", "W"],
+        ["p", "W", "W", "W", "p"],
+        ["k", "p", "p", "p", "k"]]
+
+#
+penalty_points = [0, 0]
 
 
 # X, Y Coords for each box (to make our lives easier for onclick events)
@@ -351,33 +353,18 @@ def delete_piece(x, y, board, board_turtles):
 
 def get_piece(row, column):
     # gets the piece from the board at the specified coord
-    string_array = board.split(" ")
+    string_array = board
 
-    # 5 rows per column
-    row_offset = row * 5
-
-    column_offset = (column + 1)
-
-    # add total offset and remove 1 because computers count from 0
-    total_offset = (2 + row_offset + column_offset) - 1
-
-    return string_array[total_offset]
+    return string_array[row][column]
 
 
 def set_piece(board_string, row, column, new_val):
     # sets the given piece to a new value
-    string_array = board_string.split(" ")
-    # 5 rows per column
-    row_offset = row * 5
+    string_array = board_string
 
-    column_offset = (column + 1)
+    string_array[row][column] = new_val
 
-    # add total offset and remove 1 because computers count from 0
-    total_offset = (2 + row_offset + column_offset) - 1
-
-    string_array[total_offset] = new_val
-
-    return " ".join(string_array)
+    return string_array
 
 
 def game_over():
@@ -388,39 +375,37 @@ def game_over():
     # returns 3 if the game is not over
 
     # check whether one of the players has made two illegal moves
-    if board[0] == "2" and board[2] == "2":
+    if penalty_points[0] == 2 and penalty_points[1] == 2:
         return 2
-    elif board[0] == "2":
+    elif penalty_points[0] == 2:
         return 0
-    elif board[2] == "2":
+    elif penalty_points[1] == 2:
         return 1
 
     # now check whether one of the players has no pawns left
     # loop over each pawn
-    pieces = board.split(" ")
 
     ai_pieces = 0
     player_pieces = 0
 
     # don't want to include the first two entries since they define the amount of infractions for that player
-    for piece in pieces[2:]:
-        if (piece == "K" or piece == "P"):
-            ai_pieces += 1
-        elif (piece == "k" or piece == "p"):
-            player_pieces += 1
+    for row in board:
+        for column in row:
+            if column == "K" or column == "P":
+                ai_pieces += 1
+            elif column == "k" or column == "p":
+                player_pieces += 1
 
-    if (ai_pieces == 0):
+    if ai_pieces == 0:
         return 1
-    elif (player_pieces == 0):
+    elif player_pieces == 0:
         return 0
     else:
-        # the game isn't over
         return 3
 
 
 def penalty_add(player):
     # this function will add a penalty to the player specified
-    split_board = board.split(" ")
 
     if player == "p":
         penalty_index = 0
@@ -428,11 +413,11 @@ def penalty_add(player):
         penalty_index = 1
 
     # add one to the penalty, and return the new board
-    cur_val = int(split_board[penalty_index])
+    cur_val = int(penalty_points[penalty_index])
     cur_val += 1
-    split_board[penalty_index] = str(cur_val)
+    penalty_points[penalty_index] = cur_val
 
-    return " ".join(split_board)
+    return board
 
 
 def clicky(x, y):

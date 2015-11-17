@@ -4,15 +4,12 @@ import turtle
 
 # declare all of the main variables
 
-# Stores the state of the board in a string, (MOST EFFICIENT METHOD EVER)
-# first 2 zeroes store the number of illegal moves for each player (player, ai)
 board = [["K", "P", "P", "P", "K"],
         ["P", "W", "W", "W", "P"],
         ["W", "W", "W", "W", "W"],
         ["p", "W", "W", "W", "p"],
         ["k", "p", "p", "p", "k"]]
 
-#
 penalty_points = [0, 0]
 
 
@@ -89,8 +86,6 @@ def draw_board():
 
     # Execute Cam's function to draw the welcome text
     welcome_text(screen)
-
-    print("Drawing board")
 
     # Initiate turtle that will draw the board
     main_board = turtle.Turtle()
@@ -177,7 +172,6 @@ def draw_board():
 def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     """
     This function handles the movement process for both pieces to make sure they are simultaneous
-
     x2, y2, new_x2, new_y2 is for the AI
     """
     global board
@@ -207,7 +201,7 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
             board = execute_move(x, y, new_x, new_y, SYMBOL_DICT[get_piece(y, x)])
     else:
         # the pieces are moving to different locations, simultaneous movement does not matter
-        print("Executing moves normally")
+
 
         # we need to save the pawn type for each value
         if x != -1:
@@ -225,12 +219,12 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
 def execute_move(x, y, new_x, new_y, symbol):
     """
     Executes a given move, rather than just handling them
-
     """
+    row = 0
+    column = 0
 
-    global board
-
-    print("Moving ", x, y, "to", new_x, new_y)
+    global highlight_params, box_selected, board
+    print("Moving The Piece At: Column:", highlight_params[1], "and Row:", highlight_params[2], "\n\t\t To: Column:", column, "and Row:", row)
 
     # replace piece on the board
 
@@ -264,13 +258,11 @@ def valid_move(x, y, newx, newy, playername):
         piece_type = get_piece(x, y)
         new_piece_type = get_piece(newx, newy)
         if piece_type.lower() == "k":
-            print("Knight piece")
             if ((piece_type == "k" and playername == "p") or (piece_type == "K" and playername == "a")):
                 # make sure they own that piece
                 # see whether it is a valid knight move in the grid
                 for move in knight_moves:
                     if (x + move[0]) == newx and (y + move[1] == newy):
-                        print("Valid L shape, checking whether they own the outgoing piece")
                         if (playername == "p"):
                             if (new_piece_type != "p" and new_piece_type != "k"):
                                 # valid knight move, continue on
@@ -285,7 +277,6 @@ def valid_move(x, y, newx, newy, playername):
                 return False
 
         elif piece_type.lower() == "p":
-            print("pawn piece")
 
             if ((piece_type == "p" and playername == "p") or (piece_type == "P" and playername == "a")):
                 # they own the pawn piece
@@ -338,7 +329,6 @@ def delete_piece(x, y, board, board_turtles):
     """
     This function will remove a board piece, and do the proper logic to remove the current location of it
     """
-    print("Deleting ", x, y)
 
     # get the turtle at x, y
     cur_turtle = board_turtles[y][x]
@@ -378,9 +368,9 @@ def game_over():
     # check whether one of the players has made two illegal moves
     if penalty_points[0] == 2 and penalty_points[1] == 2:
         return 2
-    elif penalty_points[0] == 2:
+    elif penalty_points[0] == 2 and not penalty_points[1] == 2:
         return 0
-    elif penalty_points[1] == 2:
+    elif penalty_points[1] == 2 and not penalty_points[0] == 2:
         return 1
 
     # now check whether one of the players has no pawns left
@@ -409,9 +399,9 @@ def penalty_add(player):
     # this function will add a penalty to the player specified
 
     if player == "p":
-        penalty_index = 0
+        penalty_index = 0 #Define player as index 0
     else:
-        penalty_index = 1
+        penalty_index = 1 #Define player as index 1
 
     # add one to the penalty, and return the new board
     cur_val = int(penalty_points[penalty_index])
@@ -427,7 +417,6 @@ def clicky(x, y):
     # check whether they clicked inside the board
     if box_locations[0][0][0] < x < (box_locations[4][4][0] + BOARD_DIMENSION/5) and (box_locations[4][4][1] - BOARD_DIMENSION/5) < y < box_locations[0][0][1]:
         # they clicked inside, let's go!
-        print("Clicked inside the game board")
 
         global highlight_params, box_selected, board
 
@@ -452,18 +441,16 @@ def clicky(x, y):
 
                 if (i[0] + (BOARD_DIMENSION/5)) > x > i[0] and i[1] > y > (i[1] - (BOARD_DIMENSION/5)):
 
-                    print("Hit button  Row", row, "Column", column)
-                    print(highlight_params[1], highlight_params[2], column, row)
+                    # What is this for?  print(highlight_params[1], highlight_params[2], column, row)
+                    #print("Clicked on: Row", row, "& Column:", column)
 
                     if column != highlight_params[1] or row != highlight_params[2]:
 
                         if box_selected == 1:
                             # move the piece, a move was made
-                            print("Move piece")
 
                             # generate the AI move
-                            print(highlight_params[1], highlight_params[2], column, row)
-
+                            
                             player_validity = valid_move((highlight_params[2] - 1), (highlight_params[1] - 1), (row - 1), (column - 1), "p")
 
                             print(player_validity)
@@ -491,9 +478,7 @@ def clicky(x, y):
                             if game_state != 3:
                                 game_end_screen(game_state)
 
-                            print(board)
-
-                            print("AI Move:", ai_val)
+#                            print("AI Move:", ai_val)
 
                             box_selected = 0
                             highlight_params[0] = 0
@@ -530,26 +515,21 @@ def ai_move():
     # this function figures out what valid move the AI should make
     # this is also a very stupid ai
 
-    print("Generating AI move")
-
     knight_moves = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]
     for x in range(5):
         for y in range(5):
             piece_type = get_piece(x, y)
             # check whether the AI owns this piece
             if piece_type == "K":
-                print("AI Knight piece")
 
                 for move in knight_moves:
                     if 0 <= (x + move[0]) < 5 and 0 <= (y + move[1]) < 5:
                         # it is inside the board
-                        print("Valid L shape, checking whether they own the outgoing piece")
                         if get_piece((x+move[0]), (y+move[1])) != "P" and get_piece((x+move[0]), (y+move[1])) != "K":
                             # valid AI move for the knight, return it
                             return [x, y, (x+move[0]), (y+move[1])]
 
             elif piece_type == "P":
-                print("pawn piece")
 
                 # offset of rows is down for the AI
                 offset_val = x + 1
@@ -566,7 +546,6 @@ def ai_move():
                 if 0 <= offset_val < 5:
                     # check whether it is going forward
                     # check whether forward is whitespace or not
-                    print("Checking whitespace")
                     if get_piece(offset_val, y) == "W":
                         return [x, y, offset_val, y]
     return False

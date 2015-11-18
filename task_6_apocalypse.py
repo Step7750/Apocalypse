@@ -226,8 +226,6 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1):
     """
     Executes a given move, rather than just handling them
     """
-    row = 0
-    column = 0
 
     global highlight_params, box_selected, board
     print("Moving The Piece At: Column:", y, "and Row:", x, "\n\t\t To: Column:", new_y, "and Row:", new_x)
@@ -596,9 +594,9 @@ def main():
     # print out the "Apocalypse" text
     print("""
        (                         (
-       )\                      ) )\(              (
-    ((((_)(  `  )  (    (  ( /(((_)\ ) `  )  (    ))\\
-     )\ _ )\ /(/(  )\   )\ )(_) )_(()/( /(/(  )\  /((_)
+       )\                      ) )\(             (
+    ((((_)(  `  )  (    (  ( /(((_)\ ) `  )  (   ))\\
+     )\ _ )\ /(/(  )\   )\ )(_) )_(()/( /(/(  )\ /((_)
      (_)_\(_|(_)_\((_) ((_| (_)_| |(_)|(_)_\((__|__))
       / _ \ | '_ \) _ \/ _|/ _` | | || | '_ \|_-< -_)
      /_/ \_\| .__/\___/\__|\__,_|_|\_, | .__//__|___|

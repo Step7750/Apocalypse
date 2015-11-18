@@ -1,7 +1,5 @@
 import turtle
 
-# I just played the game a bit and there are a shit ton of bugs, please find and fix them (game logic bugs)
-
 # declare all of the main variables
 
 board = [["K", "P", "P", "P", "K"],
@@ -73,6 +71,12 @@ def welcome_text(screen):
     welcome2.setposition(x=0, y=ycord2)
     welcome2.write("This is a simultaneous turn game which is based upon rules of chess", move=False, align="center",
                    font=("Arial", 18))
+
+
+def print_board():
+    print("Board:")
+    for i in range(5):
+        print(board[i])
 
 
 # Stepan's function
@@ -206,17 +210,19 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
         # we need to save the pawn type for each value
         if x != -1:
             player_pawn = SYMBOL_DICT[get_piece(y, x)]
+            player_code = get_piece(y, x)
         if x2 != -1:
             ai_pawn = SYMBOL_DICT[get_piece(y2, x2)]
+            ai_code = get_piece(y2, x2)
 
         if (x != -1):
-            board = execute_move(x, y, new_x, new_y, player_pawn)
+            board = execute_move(x, y, new_x, new_y, player_pawn, player_code)
         if (x2 != -1):
             # since this is the second move,
-            board = execute_move(x2, y2, new_x2, new_y2, ai_pawn)
+            board = execute_move(x2, y2, new_x2, new_y2, ai_pawn, ai_code)
 
 
-def execute_move(x, y, new_x, new_y, symbol):
+def execute_move(x, y, new_x, new_y, symbol, piece_code=-1):
     """
     Executes a given move, rather than just handling them
     """
@@ -224,11 +230,13 @@ def execute_move(x, y, new_x, new_y, symbol):
     column = 0
 
     global highlight_params, box_selected, board
-    print("Moving The Piece At: Column:", highlight_params[1], "and Row:", highlight_params[2], "\n\t\t To: Column:", column, "and Row:", row)
+    print("Moving The Piece At: Column:", y, "and Row:", x, "\n\t\t To: Column:", new_y, "and Row:", new_x)
 
     # replace piece on the board
+    if piece_code == -1:
+        piece_code = get_piece(y, x)
 
-    board = set_piece(board, new_y, new_x, get_piece(y, x))
+    board = set_piece(board, new_y, new_x, piece_code)
     #board[new_y][new_x] = board[y][x]
 
 
@@ -292,13 +300,15 @@ def valid_move(x, y, newx, newy, playername):
                 if (newx == offset_val and newy == (y + 1)) or (newx == offset_val and newy == (y - 1)):
                     # check whether there is an enemy there
                     print("Checking diagonal")
+                    print("New Piece is " + new_piece_type)
+                    print("Board State: " + str(board))
                     if playername == "p":
-                        if (new_piece_type == "K" or new_piece_type == "P"):
+                        if new_piece_type == "K" or new_piece_type == "P":
                             return True
                         else:
                             return False
                     elif playername == "a":
-                        if (new_piece_type == "k" or new_piece_type == "p"):
+                        if new_piece_type == "k" or new_piece_type == "p":
                             return True
                         else:
                             return False
@@ -334,12 +344,12 @@ def delete_piece(x, y, board, board_turtles):
     cur_turtle = board_turtles[y][x]
 
     # set the state of the board at that location to W
-    board = set_piece(board, y, x, "W")
+    board_new = set_piece(board, y, x, "W")
 
     # clear any symbols in that location
     cur_turtle.clear()
 
-    return board
+    return board_new
 
 
 def get_piece(row, column):
@@ -450,7 +460,7 @@ def clicky(x, y):
                             # move the piece, a move was made
 
                             # generate the AI move
-                            
+
                             player_validity = valid_move((highlight_params[2] - 1), (highlight_params[1] - 1), (row - 1), (column - 1), "p")
 
                             print(player_validity)
@@ -461,6 +471,10 @@ def clicky(x, y):
                             if ai_val != False and player_validity == True:
                                 # both made valid moves, we'll process them
                                 move_piece((highlight_params[1] - 1), (highlight_params[2] - 1), (column - 1), (row - 1), ai_val[1], ai_val[0], ai_val[3], ai_val[2])
+                            elif ai_val == False and player_validity == False:
+                                print("AI and Player Penalty")
+                                board = penalty_add("a")
+                                board = penalty_add("p")
                             elif ai_val == False:
                                 # give the ai a penalty, and process the move
                                 print("AI Penalty")
@@ -470,6 +484,7 @@ def clicky(x, y):
                                 print("Player Penalty")
                                 board = penalty_add("p")
                                 move_piece(-1, 0, 0, 0, ai_val[1], ai_val[0], ai_val[3], ai_val[2])
+
 
 
                             # check the game state, see whether someone won or not
@@ -484,6 +499,8 @@ def clicky(x, y):
                             highlight_params[0] = 0
                             highlight_params[1] = 0
                             highlight_params[2] = 0
+
+                            print_board()
 
                         elif get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p":
                             # only let the user select tiles it owns

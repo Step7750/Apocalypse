@@ -41,7 +41,7 @@ SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
 
 # store the state of the highlighting of boxes
 
-highlight_params = [0, 0, 0]
+highlight_params = [0, 0, 0, False, 0]
 box_selected = 0
 
 
@@ -222,26 +222,28 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
             board = execute_move(x2, y2, new_x2, new_y2, ai_pawn, ai_code)
 
 
-def execute_move(x, y, new_x, new_y, symbol, piece_code=-1):
+def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
     """
     Executes a given move, rather than just handling them
     """
 
     global highlight_params, box_selected, board
-    print("Moving The Piece At: Column:", y, "and Row:", x, "\n\t\t To: Column:", new_y, "and Row:", new_x)
+    print("Moving The Piece At: Column:", y, "and Row:", x, "\n\t\t\t To: Column:", new_y, "and Row:", new_x)
 
     # replace piece on the board
     if piece_code == -1:
         piece_code = get_piece(y, x)
 
     board = set_piece(board, new_y, new_x, piece_code)
-    #board[new_y][new_x] = board[y][x]
 
 
     # check the saved symbol is the same as the current piece on the board at that location, make sure we don't delete it
     test_symbol = SYMBOL_DICT[get_piece(y, x)]
-    if test_symbol == symbol:
+    if test_symbol == symbol and force_delete == 3:
         # the other player did not move into our old location, we can delete whatever is there
+        board = delete_piece(x, y, board, board_turtles)
+    if force_delete == True:
+        print("Force deleting the piece")
         board = delete_piece(x, y, board, board_turtles)
 
     # Get the turtle stored for the new block
@@ -359,9 +361,11 @@ def get_piece(row, column):
 
 def set_piece(board_string, row, column, new_val):
     # sets the given piece to a new value
+    global board
     string_array = board_string
 
     string_array[row][column] = new_val
+    #board[row][column] = new_val
 
     return string_array
 
@@ -418,6 +422,19 @@ def penalty_add(player):
 
     return board
 
+def knight_amount(player):
+    """
+    Returns amount of knights the player has
+    """
+    knight_amt = 0
+    for row in board:
+        for column in row:
+            if player == "p" and column == "k":
+                knight_amt += 1
+            elif player == "a" and column == "K":
+                knight_amt += 1
+    return knight_amt
+
 
 def clicky(x, y):
     # its a good name, isn't it?
@@ -454,13 +471,13 @@ def clicky(x, y):
 
                     if column != highlight_params[1] or row != highlight_params[2]:
 
-                        if box_selected == 1:
+                        if box_selected == 1  and highlight_params[3] == False:
                             # move the piece, a move was made
 
                             # generate the AI move
 
                             player_validity = valid_move((highlight_params[2] - 1), (highlight_params[1] - 1), (row - 1), (column - 1), "p")
-
+                            player_type_val = get_piece((highlight_params[2] - 1), (highlight_params[1] - 1))
                             print(player_validity)
 
                             # generate the AI move
@@ -484,7 +501,8 @@ def clicky(x, y):
                                 move_piece(-1, 0, 0, 0, ai_val[1], ai_val[0], ai_val[3], ai_val[2])
 
 
-
+                            print("Row",row,"Column",column)
+                            print("Pawn Type:",player_type_val)
                             # check the game state, see whether someone won or not
                             # maybe we should game the screen to reflect this???
                             game_state = game_over()
@@ -493,14 +511,56 @@ def clicky(x, y):
 
 #                            print("AI Move:", ai_val)
 
-                            box_selected = 0
+                            # check whether a player has moved to the end row with a pawn
+                            if player_type_val == "p" and (row - 1) == 0:
+                                print("Player pawn got to the last rank, checking how many knights they have")
+                                if knight_amount("p") >= 2:
+                                    print("Allowing them to redeploy pawn")
+
+                                    highlight_params[3] = True
+                                    highlight_params[1] = column
+                                    highlight_params[2] = row
+                                    box_selected = 0
+
+                                    redeploy_turtle = turtle.Turtle()
+
+                                    highlight_params[4] = redeploy_turtle
+                                    redeploy_turtle._tracer(False)
+                                    redeploy_turtle.hideturtle()
+                                    redeploy_turtle.color("#FF9500")
+
+                                    redeploy_turtle.up()
+                                    redeploy_turtle.goto(i[0], i[1])
+                                    redeploy_turtle.down()
+                                    for i2 in range(4):
+                                        redeploy_turtle.forward(BOARD_DIMENSION/5)
+                                        redeploy_turtle.right(90)
+                                    redeploy_turtle.up()
+                                else:
+                                    print("Changing piece to a knight")
+                                    execute_move(column - 1, row - 1, column - 1, row - 1, "♘", "k", False)
+                                    #set_piece(board, (highlight_params[2] - 1), (highlight_params[1] - 1), "K")
+                                    box_selected = 0
+                                    highlight_params[0] = 0
+                                    highlight_params[1] = 0
+                                    highlight_params[2] = 0
+                            else:
+                                box_selected = 0
+                                highlight_params[0] = 0
+                                highlight_params[1] = 0
+                                highlight_params[2] = 0
+
+                            print_board()
+                        elif highlight_params[3] == True and get_piece(row - 1, column - 1) == "W":
+                            print("The user wants to redeploy the pawn, making the move")
+                            print(highlight_params)
+                            execute_move((highlight_params[1] - 1), (highlight_params[2] - 1), (column - 1), (row - 1), "♙", "p", True)
+                            highlight_params[4].clear()
                             highlight_params[0] = 0
                             highlight_params[1] = 0
                             highlight_params[2] = 0
-
-                            print_board()
-
-                        elif get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p":
+                            highlight_params[3] = False
+                        elif (get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p") and highlight_params[3] == False:
                             # only let the user select tiles it owns
                             selected_turtle.up()
                             selected_turtle.goto(i[0], i[1])
@@ -515,11 +575,14 @@ def clicky(x, y):
                             highlight_params[1] = column
                             highlight_params[2] = row
                     else:
-                        print("deselected same box")
-                        highlight_params[0] = 0
-                        highlight_params[1] = 0
-                        highlight_params[2] = 0
-                        box_selected = 0
+                        if highlight_params[3] == False:
+                            print("deselected same box")
+                            highlight_params[0] = 0
+                            highlight_params[1] = 0
+                            highlight_params[2] = 0
+                            box_selected = 0
+                        else:
+                            print("You must redeploy to whitespace")
 
             column = 0
     else:
@@ -613,3 +676,4 @@ def main():
 # call the main function
 if __name__ == '__main__':
     main()
+

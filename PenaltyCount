@@ -28,10 +28,13 @@ board_turtles = [[0, 0, 0, 0, 0],
 
 # Initiate the screen with bgcolor
 screen = turtle.Screen()
+screen.bgcolor("#4A4A4A")
+
 penaltyTurtleP = turtle.Turtle()
 penaltyTurtleAI = turtle.Turtle()
+movesTurtle = turtle.Turtle()
+moveOffset = 70
 
-screen.bgcolor("#4A4A4A")
 
 
 # Constants created by Khesualdo, they store the appropriate board dimensions and a dict defining the conversion from int to symbol
@@ -257,7 +260,7 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
 
     # write out the piece symbol centered in the block in ariel font with a size of the block height/width
     new_turtle.write(symbol, False, align="center", font=("Ariel", int(BOARD_DIMENSION/5)))
-
+    displayMove(x, y, new_x, new_y)
     return board
 
 
@@ -427,10 +430,25 @@ def penalty_add(player):
 
     return board
 
+def displayMove(x, y, new_x, new_y):
+
+    global moveOffset
+
+    moveOffset += 15
+    movesTurtle.speed(0)
+    movesTurtle.ht()
+    movesTurtle.color("grey")
+
+    movesTurtle.up()
+    movesTurtle.goto((BOARD_DIMENSION/2 - 5), (BOARD_DIMENSION/2 - moveOffset))
+    movesTurtle.down()
+    movesTurtle.write((x+1,y+1,"-",new_x+1, new_y+1), False, align="center", font=("Ariel", int(BOARD_DIMENSION/35)))
+
 def penaltyCount():
+
     penaltyTurtleP.undo()
     penaltyTurtleAI.undo()
-    penaltyTurtleP.undo()
+
     penaltyTurtleP.speed(0)
     penaltyTurtleP.ht()
     penaltyTurtleP.color("grey")
@@ -698,7 +716,7 @@ def main():
     print("Welcome to Apocalypse!!\nThis is a simultaneous turn game which is based upon rules of chess\n")
     draw_board()
     penaltyCount()
-    
+
     # bind the event handler
     screen.onclick(clicky)
 

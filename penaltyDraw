@@ -1,0 +1,20 @@
+def penaltyDraw():
+    penaltyTurtleP = turtle.Turtle()
+    penaltyTurtleP.speed(0)
+    penaltyTurtleP.ht()
+    penaltyTurtleP.color("grey")
+
+    penaltyTurtleAI = turtle.Turtle()
+    penaltyTurtleAI.speed(0)
+    penaltyTurtleAI.ht()
+    penaltyTurtleAI.color("white")
+
+    penaltyTurtleP.up()
+    penaltyTurtleP.goto((BOARD_DIMENSION/2 - 35), (BOARD_DIMENSION/2 - 50))
+    penaltyTurtleP.down()
+    penaltyTurtleP.write(penalty_points[0], False, align="center", font=("Ariel", int(BOARD_DIMENSION/7)))
+
+    penaltyTurtleAI.up()
+    penaltyTurtleAI.goto((BOARD_DIMENSION/2 + 25), (BOARD_DIMENSION/2 - 50))
+    penaltyTurtleAI.down()
+    penaltyTurtleAI.write(penalty_points[1], False, align="center", font=("Ariel", int(BOARD_DIMENSION/7)))

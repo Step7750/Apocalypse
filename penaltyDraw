@@ -1,4 +1,7 @@
 def penaltyDraw():
+
+    global penalty_points
+    
     penaltyTurtleP = turtle.Turtle()
     penaltyTurtleP.speed(0)
     penaltyTurtleP.ht()

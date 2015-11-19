@@ -503,11 +503,7 @@ def clicky(x, y):
 
                             print("Row",row,"Column",column)
                             print("Pawn Type:",player_type_val)
-                            # check the game state, see whether someone won or not
-                            # maybe we should game the screen to reflect this???
-                            game_state = game_over()
-                            if game_state != 3:
-                                game_end_screen(game_state)
+
 
 #                            print("AI Move:", ai_val)
 
@@ -549,6 +545,12 @@ def clicky(x, y):
                                 highlight_params[0] = 0
                                 highlight_params[1] = 0
                                 highlight_params[2] = 0
+
+                            # check the game state, see whether someone won or not
+                            # maybe we should game the screen to reflect this???
+                            game_state = game_over()
+                            if game_state != 3:
+                                game_end_screen(game_state)
 
                             print_board()
                         elif highlight_params[3] == True and get_piece(row - 1, column - 1) == "W":
@@ -617,9 +619,9 @@ def ai_move():
                     # it is within the constraints of the board, check whether there is an enemy there
                     if get_piece(offset_val, (y + 1)) == "k" or get_piece(offset_val, (y + 1)) == "p":
                         return [x, y, offset_val, (y + 1)]
-                elif 0 <= offset_val < 5 and 0 <= (y - 1) < 5:
+                if 0 <= offset_val < 5 and 0 <= (y - 1) < 5:
                     # it is within the constraints of the board, check whether there is an enemy there
-                    if get_piece(offset_val, (y - 1)) == "k" and get_piece(offset_val, (y - 1)) == "p":
+                    if get_piece(offset_val, (y - 1)) == "k" or get_piece(offset_val, (y - 1)) == "p":
                         return [x, y, offset_val, (y - 1)]
                 if 0 <= offset_val < 5:
                     # check whether it is going forward
@@ -676,4 +678,3 @@ def main():
 # call the main function
 if __name__ == '__main__':
     main()
-

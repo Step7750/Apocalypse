@@ -102,7 +102,7 @@ def draw_board():
     main_board._tracer(False)
 
     # center the board, -10 is a static offset
-    main_board.goto(-(BOARD_DIMENSION/2) - 10, BOARD_DIMENSION/2)
+    main_board.goto(-(BOARD_DIMENSION/2) - 70, BOARD_DIMENSION/2)
 
     # create outer rectangle
     main_board.down()
@@ -113,7 +113,7 @@ def draw_board():
     main_board.penup()
 
     # move turtle back to top left of the board
-    main_board.goto(-(BOARD_DIMENSION/2) - 10, BOARD_DIMENSION/2)
+    main_board.goto(-(BOARD_DIMENSION/2) - 70, BOARD_DIMENSION/2)
 
     # iterate through each box and draw it
     for row in range(0, 5):
@@ -169,7 +169,7 @@ def draw_board():
             main_board.setx(main_board.xcor() + (BOARD_DIMENSION/5))
 
         # reset x position each time a row is done (to the very left), move the turtle down one block
-        main_board.setpos(-(BOARD_DIMENSION/2) - 10, (main_board.ycor() - (BOARD_DIMENSION/5)))
+        main_board.setpos(-(BOARD_DIMENSION/2) - 70, (main_board.ycor() - (BOARD_DIMENSION/5)))
 
 
 # Michael's function

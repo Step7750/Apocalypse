@@ -620,15 +620,19 @@ def clicky(x, y):
                                 move_piece((highlight_params[1] - 1), (highlight_params[2] - 1), (column - 1), (row - 1), ai_val[1], ai_val[0], ai_val[3], ai_val[2])
                             elif ai_val == False and player_validity == False:
                                 print("AI and Player Penalty")
+                                message_queue("Player Penalty")
+                                message_queue("AI Penalty")
                                 board = penalty_add("a")
                                 board = penalty_add("p")
                             elif ai_val == False:
                                 # give the ai a penalty, and process the move
                                 print("AI Penalty")
+                                message_queue("AI Penalty")
                                 board = penalty_add("a")
                                 move_piece((highlight_params[1] - 1), (highlight_params[2] - 1), (column - 1), (row - 1), -1, 0, 0, 0)
                             elif player_validity == False:
                                 print("Player Penalty")
+                                message_queue("Player Penalty")
                                 board = penalty_add("p")
                                 move_piece(-1, 0, 0, 0, ai_val[1], ai_val[0], ai_val[3], ai_val[2])
 
@@ -664,6 +668,8 @@ def clicky(x, y):
                                         redeploy_turtle.forward(BOARD_DIMENSION/5)
                                         redeploy_turtle.right(90)
                                     redeploy_turtle.up()
+                                    message_queue("Redeploy Pawn to")
+                                    message_queue("a Vacant Square")
                                 else:
                                     print("Changing piece to a knight")
                                     execute_move(column - 1, row - 1, column - 1, row - 1, "♘", "k", False)

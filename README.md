@@ -4,5 +4,4 @@ CPSC Group Project Version Control
 
 # Version Control Regulations
 
-You must make a "pull request" when editing code to push into the main branch.
-Make sure you pull your requests to the development branch. I (Stepan) will review all code submitted and make sure you have proper documentation.
+All of the group members can edit the pre existing code, make *sure* you comment your changes when changing the code

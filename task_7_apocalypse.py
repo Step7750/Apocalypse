@@ -439,7 +439,7 @@ def displayMove(x, y, new_x, new_y):
     global moveOffset
 
     # reset the messages if it goes beyond the height of board dimension
-    if (moveOffset > llBOARD_DIMENSION):
+    if (moveOffset > BOARD_DIMENSION):
         moveOffset = 70
         movesTurtle.clear()
 

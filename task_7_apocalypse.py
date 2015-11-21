@@ -29,6 +29,7 @@ board_turtles = [[0, 0, 0, 0, 0],
 # Initiate the screen with bgcolor
 screen = turtle.Screen()
 screen.bgcolor("#4A4A4A")
+screen.title("Apocalypse")
 
 penaltyTurtleP = turtle.Turtle()
 penaltyTurtleP.hideturtle()
@@ -342,7 +343,6 @@ def valid_move(x, y, newx, newy, playername):
         return False
 
 
-
 # Michael's function
 def delete_piece(x, y, board, board_turtles):
     """
@@ -505,7 +505,7 @@ def load_state():
     try:
         global penalty_points, board, moveOffset
         file_obj = open("saved_board.apoc", "r")
-        # the file is just a single line defining the state
+
         penalty_line = file_obj.readline().split(" ")
         penalty_points = [int(penalty_line[0]), int(penalty_line[1])]
         board_new_data = []
@@ -536,7 +536,6 @@ def load_state():
     except:
         print("There was an error loading the board")
         message_queue("Error Loading Board")
-
 
 
 def save_state():
@@ -644,7 +643,7 @@ def clicky(x, y):
 #                            print("AI Move:", ai_val)
 
                             # check whether a player has moved to the end row with a pawn
-                            if player_type_val == "p" and (row - 1) == 0:
+                            if player_type_val == "p" and (row - 1) == 0 and player_validity == True:
                                 print("Player pawn got to the last rank, checking how many knights they have")
                                 if knight_amount("p") >= 2:
                                     print("Allowing them to redeploy pawn")

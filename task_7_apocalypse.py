@@ -1,4 +1,5 @@
 import turtle
+import platform   # used to know what the scaling should be
 
 # declare all of the main variables
 
@@ -169,8 +170,15 @@ def draw_board():
 
             # mac osx and windows have different symbol designs, with diff height/width
             # haven't tested on a Unix system other than Mac OSX, Linux may have a different character set
-            char_turtle.sety(main_board.ycor() - (BOARD_DIMENSION/5))
-            char_turtle.write(text_to_write, False, align="center", font=("Ariel", int(BOARD_DIMENSION/5)))
+
+            if platform.system() == "Windows":
+                # adjust scaling of the y coord based upon the os
+                char_turtle.sety(main_board.ycor() - (BOARD_DIMENSION/4.10))
+                char_turtle.write(text_to_write, False, align="center", font=("Ariel", int(BOARD_DIMENSION/5.4)))
+            else:
+                # haven't tested on a Unix system other than Mac OSX, Linux may have a different character set
+                char_turtle.sety(main_board.ycor() - (BOARD_DIMENSION/5))
+                char_turtle.write(text_to_write, False, align="center", font=("Ariel", int(BOARD_DIMENSION/5)))
 
             # add turtle to the board so that the memory location is stored
             board_turtles[row][column] = char_turtle
@@ -491,12 +499,12 @@ def penaltyCount():
     penaltyTurtleAI.color("darkgrey")
 
     penaltyTurtleP.up()
-    penaltyTurtleP.goto((BOARD_DIMENSION/2 - 35), (BOARD_DIMENSION/2 - 70))
+    penaltyTurtleP.goto((BOARD_DIMENSION/2 - 35), (BOARD_DIMENSION/2 - int(BOARD_DIMENSION/6)))
     penaltyTurtleP.down()
     penaltyTurtleP.write(penalty_points[0], False, align="center", font=("Ariel", int(BOARD_DIMENSION/7)))
 
     penaltyTurtleAI.up()
-    penaltyTurtleAI.goto((BOARD_DIMENSION/2 + 25), (BOARD_DIMENSION/2 - 70))
+    penaltyTurtleAI.goto((BOARD_DIMENSION/2 + 25), (BOARD_DIMENSION/2 - int(BOARD_DIMENSION/6)))
     penaltyTurtleAI.down()
     penaltyTurtleAI.write(penalty_points[1], False, align="center", font=("Ariel", int(BOARD_DIMENSION/7)))
 

@@ -1,6 +1,35 @@
-# Apocalypse
+# Apocalypse (CPSC 231)
 
-CPSC Group Project Version Control
+Apocalypse is a simulataneous movement game based upon the rules of chess.
+[Rules of Apocalypse](https://en.wikipedia.org/wiki/Apocalypse_(chess_variant))
+
+# TODO
+
+Things that still need to be worked on:
+
+~~Task 1~~
+~~Task 2~~
+~~Task 3~~
+~~Task 4~~
+~~Task 5~~
+~~Task 6~~
+~~Task 7~~
+
+Task 8:
+* MiniMax AI w/ Alpha Beta Pruning (Also gives recursion bonus points)
+* Choice of AI Difficulty
+
+Task 9:
+* Utilize classes to simplify code structure
+* Main Menu screen that allows you to play, how to play, etc...
+* Function that creates clickable buttons
+
+Task 10 (Optional):
+* Add sounds and music to the game that changes based upon the difficulty played
+
+# How to Use
+
+The most up to date version will be the python file with the greatest task number. Fictious tasks will be created after task 8 (what the TA assigns) so that we can keep proper version control
 
 # Version Control Regulations
 

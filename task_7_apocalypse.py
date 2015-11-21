@@ -271,7 +271,13 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
     new_turtle.clear()
 
     # write out the piece symbol centered in the block in ariel font with a size of the block height/width
-    new_turtle.write(symbol, False, align="center", font=("Ariel", int(BOARD_DIMENSION/5)))
+
+    if platform.system() == "Windows":
+        # adjust scaling of the y coord based upon the os
+        new_turtle.write(symbol, False, align="center", font=("Ariel", int(BOARD_DIMENSION/5.5)))
+    else:
+        # haven't tested on a Unix system other than Mac OSX, Linux may have a different character set
+        new_turtle.write(symbol, False, align="center", font=("Ariel", int(BOARD_DIMENSION/5)))
     displayMove(x, y, new_x, new_y)
     return board
 

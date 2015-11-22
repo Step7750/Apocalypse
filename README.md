@@ -3,6 +3,7 @@
 Apocalypse is a simulataneous movement game based upon the rules of chess.
 [Rules of Apocalypse](https://en.wikipedia.org/wiki/Apocalypse_(chess_variant))
 
+
 # TODO
 
 Things that still need to be worked on:
@@ -16,7 +17,7 @@ Things that still need to be worked on:
 ~~Task 7~~
 
 Task 8:
-* MiniMax AI w/ Alpha Beta Pruning (Also gives recursion bonus points)
+* ~~MiniMax AI w/ Alpha Beta Pruning (Also gives recursion bonus points)~~ There might be bugs...I'll add code, that takes the scores, and gets the immediate best option
 * Choice of AI Difficulty
 
 Task 9:

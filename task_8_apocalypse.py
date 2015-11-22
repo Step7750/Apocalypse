@@ -475,7 +475,7 @@ def maximize(depth, board_state, alpha, beta, force_reply=0):
     alpha = copy.copy(alpha)
     beta = copy.copy(beta)
     board_copy = copy.deepcopy(board_state)
-    best_move = False
+    best_move = []
     if depth == 0:
         # reached end of depth level, send back the score
         return ai_score(board_copy)
@@ -487,13 +487,19 @@ def maximize(depth, board_state, alpha, beta, force_reply=0):
             print("Move with score " + str(cur_score) + "  Move: " + str(move))
         if cur_score >= beta:
             if force_reply == 1:
-                return [move, beta]
+                return [[move], beta]
             else:
                 return beta
-        if cur_score > alpha:
-            #print("Alpha Move with a score of " + str(cur_score))
+        if cur_score > alpha and force_reply == 0:
+            # reset alpha if this isn't a forced reply (top of tree)
             alpha = cur_score
-            best_move = copy.copy(move)
+        if force_reply == 1 and cur_score >= alpha:
+            if cur_score > alpha:
+                # score is higher, empty out the current moves
+                print("Score is higher, emptying list")
+                best_move.clear()
+            alpha = cur_score
+            best_move.append(copy.deepcopy(move))
     if force_reply == 1:
         return [best_move, alpha]
     else:
@@ -886,8 +892,30 @@ def clicky(x, y):
                             print("GENERATING MINIMAX AI MOVE")
                             generated_ai = maximize(depth_amt, copy.deepcopy(board), -float("inf"), float("inf"), 1)
                             ai_val = generated_ai[0]
+                            print("AI MOVES: " + str(ai_val))
+                            if len(ai_val) == 1:
+                                ai_val = ai_val[0]
+                            elif len(ai_val) > 1:
+                                # there are multiple choices with the same score value that was calculated
+                                # check the immediate best move based upon score
+                                # if the player makes a deviation from their perfect possible move set, then the Ai will be at an advantage
+                                best_immediate_score = float("-infinity")
+                                best_immediate_move = ai_val[0]
+                                for aimove in ai_val:
+                                    # make the move
+                                    board_copy = copy.deepcopy(board)
+                                    board_copy = combine_single_move(board_copy, aimove[0], aimove[1], aimove[2], aimove[3])
+                                    cur_score = ai_score(board_copy)
+                                    print("Score of " + str(cur_score))
+                                    if cur_score > best_immediate_score:
+                                        print("Resetting value")
+                                        best_immediate_move = aimove
+                                        best_immediate_score = cur_score
+                                ai_val = best_immediate_move
+                                print("Best Immediate Score: " + str(best_immediate_score))
+                            print("==============\n\nAI Results:\nMove: " + str(ai_val))
                             print(generated_ai)
-                            if ai_val != False:
+                            if len(ai_val) > 0:
                                 ai_type_val = get_piece(ai_val[0], ai_val[1])
                             else:
                                 print("FALSE AI MOVE==============================")
@@ -1034,6 +1062,7 @@ def clicky(x, y):
 
 
 def ai_move():
+    # OUTDATED, see minmax
     # this function figures out what valid move the AI should make
     # this is also a very stupid ai
 

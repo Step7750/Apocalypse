@@ -999,7 +999,7 @@ def clicky(x, y):
                                     message_queue("a Vacant Square")
                                 else:
                                     print("Changing piece to a knight")
-                                    execute_move((highlight_params[1] - 1), (highlight_params[2] - 1), column - 1, row - 1, "♘", "k", True)
+                                    execute_move((highlight_params[1] - 1), (highlight_params[2] - 1), column - 1, row - 1, "♘", "k", False)
                                     #set_piece(board, (highlight_params[2] - 1), (highlight_params[1] - 1), "K")
                                     box_selected = 0
                                     highlight_params[0] = 0

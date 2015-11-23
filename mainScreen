@@ -23,7 +23,7 @@ def mainScreen():
     buttonTurtle.fillcolor("#FF9900")
     buttonTurtle.ht()
     buttonTurtle._tracer(30)
-
+    
     # Position the text accordingly, and display it in the center.
     mainTurtle.setposition(x = 0, y = height/3)
     mainTurtle.write("Welcome to Apocalypse!!!", move = False, align = "center", font = ("Arial", 44))

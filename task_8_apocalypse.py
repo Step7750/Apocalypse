@@ -891,6 +891,11 @@ def clicky(x, y):
                             # generate the AI move
                             print("GENERATING MINIMAX AI MOVE")
                             generated_ai = maximize(depth_amt, copy.deepcopy(board), -float("inf"), float("inf"), 1)
+
+                            # if all the combinations are -inf and the depth level is very high, try to reduce the depth level and prolong the game
+                            if generated_ai[1] == float("-infinity") and depth_amt >= 5:
+                                print("Regenerating move with lower depth level since the AI thinks it will always die")
+                                generated_ai = maximize(3, copy.deepcopy(board), -float("inf"), float("inf"), 1)
                             ai_val = generated_ai[0]
                             print("AI MOVES: " + str(ai_val))
                             if len(ai_val) == 1:

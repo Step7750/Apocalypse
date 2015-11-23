@@ -127,6 +127,7 @@ def playGame(x,y):
         print("begin game")
 
 mainScreen()
+# Only one of them works at a time
 wn.onclick(buttonSelect)
 wn.onclick(playGame)
 turtle.done()

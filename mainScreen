@@ -1,0 +1,132 @@
+import turtle
+
+wn = turtle.Screen()
+buttonCoordinates = [[0,0],[0,0],[0,0],[0,0]]
+
+def mainScreen():
+    """
+        Draws all the text and the buttons to the main screen
+    """
+    #Creating turtles and variables
+    mainTurtle = turtle.Turtle()
+    buttonTurtle = turtle.Turtle()
+    height = wn.window_height()
+    turtle.bgcolor("#484848")
+
+    # Setting up the turtles
+    mainTurtle.ht()
+    mainTurtle.penup()
+    mainTurtle.speed(0)
+    mainTurtle.color("#FF9933")
+
+    buttonTurtle.color("#FF9900")
+    buttonTurtle.fillcolor("#FF9900")
+    buttonTurtle.ht()
+    buttonTurtle._tracer(30)
+
+    # Position the text accordingly, and display it in the center.
+    mainTurtle.setposition(x = 0, y = height/3)
+    mainTurtle.write("Welcome to Apocalypse!!!", move = False, align = "center", font = ("Arial", 44))
+
+    mainTurtle.color("#FF9900")
+    mainTurtle.setposition(x = 0, y = height/3-25)
+    mainTurtle.write("This is a simultaneous turn game which is based upon rules of chess", move=False, align="center",
+                   font=("Arial", 18))
+    mainTurtle.setposition(x = 0, y = height/20)
+    mainTurtle.write("Please select the level of difficulty:", move = False, align = "center", font = ("Arial", 20))
+
+    # Set the mainTurtle to write text inside the buttons
+    mainTurtle.color("black")
+    buttonTurtle.up()
+    buttonTurtle.goto(-200, height/35 - 65)
+    buttonTurtle.down()
+
+    #Draw the 3 buttons
+    for x in range(3):
+        buttonTurtle.begin_fill()
+        for y in range(4):
+            buttonCoordinates[x][0] = buttonTurtle.xcor()
+            buttonCoordinates[x][1] = buttonTurtle.ycor()
+
+            buttonTurtle.forward(80)
+            buttonTurtle.left(90)
+            buttonTurtle.forward(40)
+            buttonTurtle.left(90)
+
+        buttonTurtle.end_fill()#How do I end fill
+        buttonTurtle.up()
+        buttonTurtle.setx(buttonTurtle.xcor() + height/4)
+        buttonTurtle.down()
+
+        mainTurtle.up()
+        mainTurtle.goto(buttonCoordinates[x][0] - 38, buttonCoordinates[x][1] - 33)
+        mainTurtle.down()
+        #Assign what should be written in each of the buttons
+        if x == 0:
+            text_to_write = "Easy"
+        elif x == 1:
+            text_to_write = "Medium"
+        elif x == 2:
+            text_to_write = "Hard"
+        #Write the text inside the buttons
+        mainTurtle.write(text_to_write, move = False, align = "center", font = ("Arial", height//30))
+    print(buttonCoordinates)
+
+    # Go down to draw the PLAY button
+    buttonTurtle.up()
+    buttonTurtle.goto(-95, mainTurtle.ycor() - height/5)
+    buttonTurtle.down()
+
+    #Draw the PLAY button
+    for x in range(4):
+        buttonCoordinates[3][0] = buttonTurtle.xcor()
+        buttonCoordinates[3][1] = buttonTurtle.ycor()
+
+        buttonTurtle.forward(180)
+        buttonTurtle.left(90)
+        buttonTurtle.forward(70)
+        buttonTurtle.left(90)
+
+    mainTurtle.up()
+    mainTurtle.goto(buttonCoordinates[3][0] - 85, buttonCoordinates[3][1] - 65)
+    mainTurtle.down()
+
+    mainTurtle.write("PLAY", move = False, align = "center", font = ("Arial", 50))
+
+def buttonSelect(x,y):
+    """
+    Returns the level of difficulty the user has selected based on the button he/she pressed
+    """
+    global buttonCoordinates
+
+    level_of_diff = None
+
+    for row in range(3):
+        if x >= buttonCoordinates[row][0]-80 and x <= buttonCoordinates[row][0] and y >= buttonCoordinates[row][1]-40 and y <= buttonCoordinates[row][1]:
+            if row == 0:
+                level_of_diff = 0
+            elif row == 1:
+                level_of_diff = 1
+            elif row == 2:
+                level_of_diff = 2
+
+        #for some reason this goes on aswell
+        else:
+            print("Didn't click inside any button")
+    print(level_of_diff)
+
+    return level_of_diff
+
+def playGame(x,y):
+    """
+    Begins the game once the user has chose the difficulty
+    """
+    global buttonCoordinates
+
+    if x >= buttonCoordinates[3][0] - 180 and x <= buttonCoordinates[3][0] and y >= buttonCoordinates[3][1]-70 and y <= buttonCoordinates[3][1]:
+        print("begin game")
+
+mainScreen()
+wn.onclick(buttonSelect)
+wn.onclick(playGame)
+turtle.done()

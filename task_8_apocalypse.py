@@ -981,7 +981,7 @@ def clicky(x, y):
                                 print("Player pawn got to the last rank, checking how many knights they have")
                                 if knight_amount(board, 1) >= 2:
                                     print("Allowing them to redeploy pawn, disabling saving")
-
+                                    # disable saving for the user when they are redeploying (fixes some glitches that they could abuse)
                                     screen.onkeyrelease(None, "s")
                                     screen.onkeyrelease(None, "l")
 

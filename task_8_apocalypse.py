@@ -689,8 +689,9 @@ def game_over():
                 ai_pieces += 1
             elif column == "k" or column == "p":
                 player_pieces += 1
-
-    if ai_pieces == 0:
+    if ai_pieces == 0 and player_pieces == 0:
+        return 2
+    elif ai_pieces == 0:
         return 1
     elif player_pieces == 0:
         return 0
@@ -979,7 +980,10 @@ def clicky(x, y):
                             if player_type_val == "p" and (row - 1) == 0 and player_validity == True:
                                 print("Player pawn got to the last rank, checking how many knights they have")
                                 if knight_amount(board, 1) >= 2:
-                                    print("Allowing them to redeploy pawn")
+                                    print("Allowing them to redeploy pawn, disabling saving")
+
+                                    screen.onkeyrelease(None, "s")
+                                    screen.onkeyrelease(None, "l")
 
                                     highlight_params[3] = True
                                     highlight_params[1] = column
@@ -1037,6 +1041,9 @@ def clicky(x, y):
                             highlight_params[1] = 0
                             highlight_params[2] = 0
                             highlight_params[3] = False
+                            # rebind the saving and loading
+                            screen.onkeyrelease(save_state, "s")
+                            screen.onkeyrelease(load_state, "l")
                         elif (get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p") and highlight_params[3] == False:
                             # only let the user select tiles it owns
                             selected_turtle.up()

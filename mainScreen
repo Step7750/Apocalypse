@@ -125,7 +125,7 @@ def playGame(x,y):
 
     if x >= buttonCoordinates[3][0] - 180 and x <= buttonCoordinates[3][0] and y >= buttonCoordinates[3][1]-70 and y <= buttonCoordinates[3][1]:
         print("begin game")
-
+    
 mainScreen()
 # Only one of them works at a time
 wn.onclick(buttonSelect)

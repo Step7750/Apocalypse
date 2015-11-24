@@ -889,6 +889,8 @@ def clicky(x, y):
                         if box_selected == 1  and highlight_params[3] == False:
                             # move the piece, a move was made
 
+                            # we don't want to let them click again while the AI move is being generated
+                            screen.onclick(None)
                             # generate the AI move
                             print("GENERATING MINIMAX AI MOVE")
                             generated_ai = maximize(depth_amt, copy.deepcopy(board), -float("inf"), float("inf"), 1)
@@ -939,6 +941,8 @@ def clicky(x, y):
                                     ai_val = False
                             print("DONE GENERATING MINIMAX AI MOVE")
 
+
+
                             player_validity = valid_move((highlight_params[2] - 1), (highlight_params[1] - 1), (row - 1), (column - 1), "p")
                             player_type_val = get_piece((highlight_params[2] - 1), (highlight_params[1] - 1))
                             print(player_validity)
@@ -975,13 +979,15 @@ def clicky(x, y):
 
                             print("Row",row,"Column",column)
                             print("Pawn Type:",player_type_val)
+                            # rebind the onscreenclick since the user cannot click fast enough now to influence the game
+                            screen.onclick(clicky)
 
                             # check whether a player has moved to the end row with a pawn
                             if player_type_val == "p" and (row - 1) == 0 and player_validity == True:
                                 print("Player pawn got to the last rank, checking how many knights they have")
                                 if knight_amount(board, 1) >= 2:
                                     print("Allowing them to redeploy pawn, disabling saving")
-                                    # disable saving for the user when they are redeploying (fixes some glitches that they could abuse)
+
                                     screen.onkeyrelease(None, "s")
                                     screen.onkeyrelease(None, "l")
 

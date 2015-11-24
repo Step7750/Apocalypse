@@ -653,10 +653,19 @@ def get_piece(row, column):
     return string_array[row][column]
 
 
-def set_piece(board_string, row, column, new_val):
+def set_piece(board, row, column, new_val):
+    """
+    Sets a value to the game state
+
+    :param board: multidimensional list defining the board state
+    :param row: **int** row of the piece to set
+    :param colum** **int** column of the piece to set
+    :param new_val: **string** value of the piece (ex. K, k, W, P, p)
+    :return:
+    """
     # sets the given piece to a new value
     global board
-    string_array = board_string
+    string_array = board
 
     string_array[row][column] = new_val
     #board[row][column] = new_val
@@ -665,7 +674,11 @@ def set_piece(board_string, row, column, new_val):
 
 
 def game_over():
-    # checks whether one player won or not, given the game state
+    """
+    Checks the global game state as to whether the game is over or not and returns a value defining the state
+
+    :return: **int** returns a value based upon the current state (0 = player won, 1 = ai won, 2 = stalemate, 3 = not game over)
+    """
     print("Checking whether it is game over or not")
 
     # returns 1 if the player won, 0 if the AI won, 2 if it is a stalemate
@@ -703,7 +716,12 @@ def game_over():
 
 
 def penalty_add(player):
-    # this function will add a penalty to the player specified
+    """
+    Adds a penalty point to the player specified
+
+    :param player: **string** letter defining the user (p for player, a for ai)
+    :return:
+    """
 
     if player == "p":
         penalty_index = 0 #Define player as index 0
@@ -721,6 +739,15 @@ def penalty_add(player):
 
 
 def displayMove(x, y, new_x, new_y):
+    """
+    Displays a given move in the queue messages
+
+    :param x: **int** x coord of old piece position
+    :param y: **int** y coord of old piece position
+    :param new_x: **int** x coord of the new piece position
+    :param new_y: **int** y coord of the new piece position
+    :return:
+    """
 
     global moveOffset
 
@@ -743,7 +770,10 @@ def displayMove(x, y, new_x, new_y):
 
 def message_queue(to_write):
     """
-    Allows us to print any text message to the queue
+    Writes any defined string to the message queue on the right of the board
+
+    :param to_write: **string** Message to write in the queue
+    :return:
     """
     global moveOffset
 
@@ -764,6 +794,11 @@ def message_queue(to_write):
 
 
 def penaltyCount():
+    """
+    Draws out the penalty points display on the right of the board
+
+    :return:
+    """
 
     penaltyTurtleP.undo()
     penaltyTurtleAI.undo()
@@ -788,6 +823,12 @@ def penaltyCount():
 
 
 def load_state():
+    """
+    Loads a saved game state and overwrites the global variables defining it. Then it draws out the new game state to
+    allow the player to continue playing
+
+    :return:
+    """
     try:
         global penalty_points, board, moveOffset
         file_obj = open("saved_board.apoc", "r")
@@ -809,7 +850,7 @@ def load_state():
         penaltyCount()
 
         # bind the event handlers again
-        screen.onclick(clicky)
+        screen.onclick(onclick_board_handler)
         screen.onkeyrelease(save_state, "s")
         screen.onkeyrelease(load_state, "l")
 
@@ -825,6 +866,11 @@ def load_state():
 
 
 def save_state():
+    """
+    Saves the global game state of the board and penalty points to a file
+
+    :return:
+    """
     try:
         file_obj = open("saved_board.apoc", "w")
         # the file is just a single line defining the state
@@ -841,7 +887,11 @@ def save_state():
 
 def knight_amount(board_state, player):
     """
-    Returns amount of knights the player has
+    Returns the amount knights a player has
+
+    :param board_state: multidimensional list defining the game state
+    :param player: **numeric** integer defining player
+    :return: **numeric** how many knights the player owns on that game state
     """
     board = board_state
     knight_amt = 0
@@ -854,8 +904,14 @@ def knight_amount(board_state, player):
     return knight_amt
 
 
-def clicky(x, y):
-    # its a good name, isn't it?
+def onclick_board_handler(x, y):
+    """
+    Handles click events on the board and figures out how to deal with the game state
+
+    :param x: **numeric** x coord of the screen click
+    :param y: **numeric** y coord of the sreen click
+    :return:
+    """
     global board
     # check whether they clicked inside the board
     if box_locations[0][0][0] < x < (box_locations[4][4][0] + BOARD_DIMENSION/5) and (box_locations[4][4][1] - BOARD_DIMENSION/5) < y < box_locations[0][0][1]:
@@ -983,7 +1039,7 @@ def clicky(x, y):
                             print("Row",row,"Column",column)
                             print("Pawn Type:",player_type_val)
                             # rebind the onscreenclick since the user cannot click fast enough now to influence the game
-                            screen.onclick(clicky)
+                            screen.onclick(onclick_board_handler)
 
                             # check whether a player has moved to the end row with a pawn
                             if player_type_val == "p" and (row - 1) == 0 and player_validity == True:
@@ -1080,46 +1136,6 @@ def clicky(x, y):
             column = 0
     else:
         print("Didn't click inside the board")
-
-
-def ai_move():
-    # OUTDATED, see minmax
-    # this function figures out what valid move the AI should make
-    # this is also a very stupid ai
-
-    knight_moves = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]
-    for x in range(5):
-        for y in range(5):
-            piece_type = get_piece(x, y)
-            # check whether the AI owns this piece
-            if piece_type == "K":
-                for move in knight_moves:
-                    if 0 <= (x + move[0]) < 5 and 0 <= (y + move[1]) < 5:
-                        # it is inside the board
-                        if get_piece((x+move[0]), (y+move[1])) != "P" and get_piece((x+move[0]), (y+move[1])) != "K":
-                            # valid AI move for the knight, return it
-                            return [x, y, (x+move[0]), (y+move[1])]
-
-            elif piece_type == "P":
-
-                # offset of rows is down for the AI
-                offset_val = x + 1
-
-                # check going diagonally right
-                if 0 <= offset_val < 5 and 0 <= (y + 1) < 5:
-                    # it is within the constraints of the board, check whether there is an enemy there
-                    if get_piece(offset_val, (y + 1)) == "k" or get_piece(offset_val, (y + 1)) == "p":
-                        return [x, y, offset_val, (y + 1)]
-                if 0 <= offset_val < 5 and 0 <= (y - 1) < 5:
-                    # it is within the constraints of the board, check whether there is an enemy there
-                    if get_piece(offset_val, (y - 1)) == "k" or get_piece(offset_val, (y - 1)) == "p":
-                        return [x, y, offset_val, (y - 1)]
-                if 0 <= offset_val < 5:
-                    # check whether it is going forward
-                    # check whether forward is whitespace or not
-                    if get_piece(offset_val, y) == "W":
-                        return [x, y, offset_val, y]
-    return False
 
 
 def game_end_screen(winner):
@@ -1376,7 +1392,7 @@ def new_game():
     penaltyCount()
 
     # bind the event handler
-    screen.onclick(clicky)
+    screen.onclick(onclick_board_handler)
     screen.onkeyrelease(save_state, "s")
     screen.onkeyrelease(load_state, "l")
     screen.listen()

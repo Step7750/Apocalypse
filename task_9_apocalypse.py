@@ -1123,7 +1123,20 @@ def ai_move():
 
 
 def game_end_screen(winner):
-    turtle.clearscreen()
+    """
+    Clears the screen and draws out the end game screen as to who won
+    
+    :param winner: **numeric** integer that defines who won (0 for AI, 1 for Player, 3 for Stalemate)
+    :return:
+    """
+
+    screen.clear()
+
+    # clear any other buttons and rebind the handler
+    global buttons
+    del buttons[:]
+    screen.onclick(button_event)
+
     screen.bgcolor("#4A4A4A")
 
     if winner == 0:
@@ -1133,34 +1146,49 @@ def game_end_screen(winner):
     elif winner == 2:
         text_write = "Stalemate!"
 
-    end_turtle = turtle.Turtle()
-    end_turtle.hideturtle()
-    end_turtle.color("white")
-    end_turtle._tracer(False)
-    # the font size is just a relative static value to make sure it is proportionate
-    end_turtle.write(text_write, move=False, align="center", font=("Arial", int(BOARD_DIMENSION/10)))
+    # configure a turtle and write out who won
+    end_screen_turtle = turtle.Turtle()
+    end_screen_turtle.hideturtle()
+    end_screen_turtle.color("white")
+    end_screen_turtle._tracer(False)
+
+    # the font size is just a relative static value to make sure it is proportionate to the screen dimensions
+    end_screen_turtle.write(text_write, move=False, align="center", font=("Arial", int(BOARD_DIMENSION/8)))
+
+    # draw out the main menu button
+    draw_button(0, -(screen.window_height()/20), "Main Menu", 'draw_main_screen()', screen.window_width()/3.5)
+    print(buttons)
+
 
 
 
 def draw_button(x, y, text, code_exec, width=0):
     """
-    x, y is the center of the button
-    text is the text of the button
-    code_exec is the function to be called when the button is clicked
+    Draws a button centered at the specified x, y point with the text passed in as a parameter and also handles
+    configuring the click events for it
+
+    :param x: **numeric** x coord of the center of the button
+    :param y: **numeric** y coord of the center of the button
+    :param text: **string** desired button text
+    :param code_exec: **string** function or code to execute when the button is clicked
+    :param width: optional **numeric** overwrites the default padding width with a specified width of the button
+    :return:
     """
-    # this can only find the width and height of the font, go from there
+
+    # Find the width of the text (finding the height is not possible)
     width_turtle = turtle.Turtle()
     width_turtle.hideturtle()
     width_turtle._tracer(False)
     init_x = width_turtle.xcor()
+
+    # set default text font size
     init_y = int(screen.window_height()/25)
+
     width_turtle.write(text, move=True, align="left", font=("Ariel", init_y))
     width_turtle.clear()
     text_width = width_turtle.xcor() - init_x
 
-    print(text_width)
-
-    # box width has padding
+    # Create the proper box size dimensions depending on whether the user has overwritten them
     if width == 0:
         width_val = text_width + text_width * 0.15
     else:
@@ -1169,6 +1197,8 @@ def draw_button(x, y, text, code_exec, width=0):
 
 
     print("Drawing button with text " + text)
+
+    # draw out the background white box around the text
     button_turtle = turtle.Turtle()
     button_turtle.hideturtle()
     button_turtle.up()
@@ -1190,44 +1220,58 @@ def draw_button(x, y, text, code_exec, width=0):
     button_turtle.end_fill()
     button_turtle.up()
     button_turtle.color("black")
+
     # Windows and Unix based systems have different font heights and scaling
     if platform.system() == "Windows":
         button_turtle.setpos(x, y - (init_y/1.4))
     else:
         button_turtle.setpos(x, y - (init_y/1.65))
-    # font height is 1.26x
-    #button_turtle.stamp()
-    button_turtle.write(text, align="center", font=("Ariel", init_y))
-    buttons.append([(x - width_val/2), (y + height_val/2), width_val, height_val, text, code_exec, ])
 
+    # write out the text in the center of the button
+    button_turtle.write(text, align="center", font=("Ariel", init_y))
+
+    # append the attributes of the button to the list "buttons" for the event handler
+    buttons.append([(x - width_val/2), (y + height_val/2), width_val, height_val, text, code_exec])
 
 
 def button_event(x, y):
     """
-    If there is an onclick main menu event on the screen, check whether it was in range of the declared buttons
+    Handles user click events on screens that have buttons
+
+    :param x: **numeric** The x coordinate of a user's click
+    :param y: **numeric** The y coordinate of a user's click
+    :return:
     """
-    #print(x, y)
+
     for i in buttons:
         if (i[0] + i[2]) > x > i[0] and i[1] > y > (i[1] - i[3]):
             exec(i[5])
-
 
 
 def draw_main_bg():
     """
     Draws the checkerboard pattern onto the screen as a background for the main menu
 
+    :return:
     """
+
+    # create the turtle that draws the checkerboard bg pattern and configure its settings
     bg_turtle = turtle.Turtle()
     bg_turtle.color("#5E5E5E")
     bg_turtle.up()
     bg_turtle.hideturtle()
-    bg_turtle.speed(10)
+
     # remove animations
     bg_turtle._tracer(False)
+
+    # define the size of each box
     box_height = screen.window_height() / 5
     box_width = screen.window_width() / 5
+
+    # set the turtle to the top left corner of the screen
     bg_turtle.setpos(-(screen.window_width()/2), (screen.window_height()/2))
+
+    # iterate and draw out the checkerboard pattern
     for row in range(0, 5):
         for column in range(0, 5):
             if row % 2 == 0:
@@ -1258,40 +1302,48 @@ def draw_main_bg():
 
 
 def draw_main_screen():
-    # reset global variables
+    """
+    Draws the main menu screen with created turtles and applies the proper event bindings for the buttons
+
+    :return:
+    """
+    global buttons
+    del buttons[:]
     screen.clear()
     screen.onclick(None)
     screen.onclick(button_event)
     screen.bgcolor("#4A4A4A")
-    turtle.title("Apocalypse")
+    screen.title("Apocalypse")
 
     # draw the checkered background
     draw_main_bg()
 
     # initialize a turtle to draw the main screen text
-    main_turtle = turtle.Turtle()
-    main_turtle.hideturtle()
-    main_turtle.up()
-    main_turtle.color("white")
-    main_turtle._tracer(False)
+    main_menu_turtle = turtle.Turtle()
+    main_menu_turtle.hideturtle()
+    main_menu_turtle.up()
+    main_menu_turtle.color("white")
+    main_menu_turtle._tracer(False)
 
-    main_turtle.sety(screen.window_height()/5)
-    main_turtle.write("Apocalypse", True, align="center", font=("Ariel", int(screen.window_height()/8)))
-    main_turtle.home()
-    main_turtle.write("♘ ♙ ♞ ♟", True, align="center", font=("Ariel", int(screen.window_height()/10)))
-    main_turtle.setposition((screen.window_width() / 2), -((screen.window_height() / 2) - 10))
+    main_menu_turtle.sety(screen.window_height()/5)
+    main_menu_turtle.write("Apocalypse", True, align="center", font=("Ariel", int(screen.window_height()/8)))
+    main_menu_turtle.home()
+    main_menu_turtle.write("♘ ♙ ♞ ♟", True, align="center", font=("Ariel", int(screen.window_height()/10)))
+    main_menu_turtle.setposition((screen.window_width() / 2), -((screen.window_height() / 2) - 10))
 
 
     draw_button(0, -(screen.window_height()/20), "New Game", 'choose_difficulty()', screen.window_width()/3.5)
     draw_button(0, -(screen.window_height()/7), "Load Game", 'load_state()', screen.window_width()/3.5)
 
 
-def main():
+def main_menu():
+    """
+    Main function call, immediately draws the main menu screen
+    
+    :return:
+    """
 
-    # want to edit the global copy
-    global board
-
-    # print out the "Apocalypse" text
+    # print out the "Apocalypse" text into the console (not needed, but a nice commemoration of our roots)
     print("""
        (                         (
        )\                      ) )\(             (
@@ -1302,16 +1354,24 @@ def main():
      /_/ \_\| .__/\___/\__|\__,_|_|\_, | .__//__|___|
             |_|                    |__/|_|
         """)
-    print("Welcome to Apocalypse!!\nThis is a simultaneous turn game which is based upon rules of chess\n")
+
     draw_main_screen()
     turtle.done()
 
 
 def new_game():
+    """
+    Starts a new game, draws the board, and binds event handlers
+
+    :return:
+    """
     global buttons
     del buttons[:]
     screen.clear()
     screen.bgcolor("#4A4A4A")
+
+    # reset the game state and draw it out
+    reset_game_state()
     draw_board()
     penaltyCount()
 
@@ -1322,7 +1382,28 @@ def new_game():
     screen.listen()
 
 
+def reset_game_state():
+    """
+    Resets the game state for a new game, rewrites variables
+
+    :return:
+    """
+    global board, penalty_points
+    board = [["K", "P", "P", "P", "K"],
+        ["P", "W", "W", "W", "P"],
+        ["W", "W", "W", "W", "W"],
+        ["p", "W", "W", "W", "p"],
+        ["k", "p", "p", "p", "k"]]
+
+    penalty_points = [0, 0]
+
+
 def choose_difficulty():
+    """
+    Clears and draws the difficulty screen
+
+    :return:
+    """
     global buttons
     del buttons[:]
     screen.clear()
@@ -1342,10 +1423,16 @@ def choose_difficulty():
 
 
 def modify_difficulty(level):
+    """
+    Modifies a global to change the ai difficulty for future move calculations
+
+    :param level: **numeric** Specifies the difficulty level (ai move depth)
+    :return:
+    """
     global depth_amt
     depth_amt = level
 
 
 # call the main function
 if __name__ == '__main__':
-    main()
+    main_menu()

@@ -25,10 +25,12 @@ Task 9:
 * Utilize classes to simplify code structure
 * ~~Main Menu screen that allows you to play, how to play, etc...~~
 * ~~Function that creates clickable buttons~~
+* Fix positioning of penalty points and the queue 
 
 Task 10 (Optional):
 * Add sounds and music to the game that changes based upon the difficulty played
-
+* Remove the text at the top of the game board
+* Add the destroyed pieces of AI and the player to the bottom of the game board
 # How to Use
 
 The most up to date version will be the python file with the greatest task number. Fictious tasks will be created after task 8 (what the TA assigns) so that we can keep proper version control

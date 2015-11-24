@@ -1190,7 +1190,11 @@ def draw_button(x, y, text, code_exec, width=0):
     button_turtle.end_fill()
     button_turtle.up()
     button_turtle.color("black")
-    button_turtle.setpos(x, y - (init_y/1.4))
+    # Windows and Unix based systems have different font heights and scaling
+    if platform.system() == "Windows":
+        button_turtle.setpos(x, y - (init_y/1.4))
+    else:
+        button_turtle.setpos(x, y - (init_y/1.65))
     # font height is 1.26x
     #button_turtle.stamp()
     button_turtle.write(text, align="center", font=("Ariel", init_y))
@@ -1338,8 +1342,9 @@ def choose_difficulty():
 
 def modify_difficulty(level):
     global depth_amt
-    print("Changed lvl")
     depth_amt = level
+
+
 # call the main function
 if __name__ == '__main__':
     main()

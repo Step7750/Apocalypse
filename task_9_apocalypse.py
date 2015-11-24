@@ -216,21 +216,21 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
         if piece_type1 == "p" and piece_type2 == "P":
             # both pawns, delete both
             print("Both are pawns, detroying both")
-            board = delete_piece(x, y, board, board_turtles)
-            board = delete_piece(x2, y2, board, board_turtles)
+            delete_piece(x, y, board, board_turtles)
+            delete_piece(x2, y2, board, board_turtles)
         elif piece_type1 == "k" and piece_type2 == "K":
             print("Both are knights, detroying both")
-            board = delete_piece(x, y, board, board_turtles)
-            board = delete_piece(x2, y2, board, board_turtles)
+            delete_piece(x, y, board, board_turtles)
+            delete_piece(x2, y2, board, board_turtles)
         elif piece_type1 == "p" and piece_type2 == "K":
 
-            board = delete_piece(x, y, board, board_turtles)
+            delete_piece(x, y, board, board_turtles)
             # execute move for AI
-            board = execute_move(x2, y2, new_x2, new_y2, SYMBOL_DICT[get_piece(y2, x2)])
+            execute_move(x2, y2, new_x2, new_y2, SYMBOL_DICT[get_piece(y2, x2)])
         elif piece_type1 == "k" and piece_type2 == "P":
-            board = delete_piece(x2, y2, board, board_turtles)
+            delete_piece(x2, y2, board, board_turtles)
             # execute move for AI
-            board = execute_move(x, y, new_x, new_y, SYMBOL_DICT[get_piece(y, x)])
+            execute_move(x, y, new_x, new_y, SYMBOL_DICT[get_piece(y, x)])
     else:
         # the pieces are moving to different locations, simultaneous movement does not matter
 
@@ -244,10 +244,10 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
             ai_code = get_piece(y2, x2)
 
         if (x != -1):
-            board = execute_move(x, y, new_x, new_y, player_pawn, player_code)
+            execute_move(x, y, new_x, new_y, player_pawn, player_code)
         if (x2 != -1):
             # since this is the second move,
-            board = execute_move(x2, y2, new_x2, new_y2, ai_pawn, ai_code)
+            execute_move(x2, y2, new_x2, new_y2, ai_pawn, ai_code)
 
 
 def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
@@ -262,17 +262,17 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
     if piece_code == -1:
         piece_code = get_piece(y, x)
 
-    board = set_piece(board, new_y, new_x, piece_code)
+    set_piece(new_y, new_x, piece_code)
 
 
     # check the saved symbol is the same as the current piece on the board at that location, make sure we don't delete it
     test_symbol = SYMBOL_DICT[get_piece(y, x)]
     if test_symbol == symbol and force_delete == 3:
         # the other player did not move into our old location, we can delete whatever is there
-        board = delete_piece(x, y, board, board_turtles)
+        delete_piece(x, y, board, board_turtles)
     if force_delete == True:
         print("Force deleting the piece")
-        board = delete_piece(x, y, board, board_turtles)
+        delete_piece(x, y, board, board_turtles)
 
     # Get the turtle stored for the new block
     new_turtle = board_turtles[new_y][new_x]
@@ -289,7 +289,6 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
         # haven't tested on a Unix system other than Mac OSX, Linux may have a different character set
         new_turtle.write(symbol, False, align="center", font=("Ariel", int(BOARD_DIMENSION/5)))
     displayMove(x, y, new_x, new_y)
-    return board
 
 
 def valid_move(x, y, newx, newy, playername):
@@ -638,12 +637,10 @@ def delete_piece(x, y, board, board_turtles):
     cur_turtle = board_turtles[y][x]
 
     # set the state of the board at that location to W
-    board_new = set_piece(board, y, x, "W")
+    set_piece(y, x, "W")
 
     # clear any symbols in that location
     cur_turtle.clear()
-
-    return board_new
 
 
 def get_piece(row, column):
@@ -653,24 +650,19 @@ def get_piece(row, column):
     return string_array[row][column]
 
 
-def set_piece(board, row, column, new_val):
+def set_piece(row, column, new_val):
     """
     Sets a value to the game state
 
-    :param board: multidimensional list defining the board state
     :param row: **int** row of the piece to set
-    :param colum** **int** column of the piece to set
+    :param column: **int** column of the piece to set
     :param new_val: **string** value of the piece (ex. K, k, W, P, p)
     :return:
     """
     # sets the given piece to a new value
     global board
-    string_array = board
 
-    string_array[row][column] = new_val
-    #board[row][column] = new_val
-
-    return string_array
+    board[row][column] = new_val
 
 
 def game_over():
@@ -1141,7 +1133,7 @@ def onclick_board_handler(x, y):
 def game_end_screen(winner):
     """
     Clears the screen and draws out the end game screen as to who won
-    
+
     :param winner: **numeric** integer that defines who won (0 for AI, 1 for Player, 3 for Stalemate)
     :return:
     """
@@ -1355,7 +1347,7 @@ def draw_main_screen():
 def main_menu():
     """
     Main function call, immediately draws the main menu screen
-    
+
     :return:
     """
 

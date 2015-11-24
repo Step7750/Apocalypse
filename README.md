@@ -18,12 +18,12 @@ Things that still need to be worked on:
 
 Task 8:
 * ~~MiniMax AI w/ Alpha Beta Pruning (Also gives recursion bonus points)~~ There might be bugs...I'll add code that takes the scores and gets the immediate best option
-* Choice of AI Difficulty
+* ~~Choice of AI Difficulty~~
 
 Task 9:
 * Utilize classes to simplify code structure
-* Main Menu screen that allows you to play, how to play, etc...
-* Function that creates clickable buttons
+* ~~Main Menu screen that allows you to play, how to play, etc...~~
+* ~~Function that creates clickable buttons~~
 
 Task 10 (Optional):
 * Add sounds and music to the game that changes based upon the difficulty played

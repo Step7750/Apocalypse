@@ -798,7 +798,7 @@ def message_queue(to_write):
     MessagesTurtle.up()
 
     # reset the messages if it goes beyond the height of board dimension
-    if moveOffset < -(BOARD_DIMENSION/3.5):
+    if moveOffset < -(BOARD_DIMENSION/4.5):
         moveOffset = saved_offset
         MessagesTurtle.clear()
 

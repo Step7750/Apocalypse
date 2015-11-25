@@ -53,7 +53,7 @@ board_turtles = [[0, 0, 0, 0, 0],
 # Initiate the screen with bgcolor
 screen = turtle.Screen()
 screen.bgcolor("#4A4A4A")
-#screen.setup(width=1000, height=1000)
+#screen.setup(width=600, height=600)
 screen.title("Apocalypse")
 
 PenaltyTurtle = turtle.Turtle()
@@ -63,13 +63,19 @@ penaltyTurtleAI.hideturtle()
 MessagesTurtle = turtle.Turtle()
 MessagesTurtle.hideturtle()
 
+print(screen.window_height())
+print(screen.window_width())
 
 # amount of moves the AI thinks forward (computation gets exponential). Anything over 7 will take a very long time....
 depth_amt = 6
 
-
-# width of the board is equal to 75% of the screen width
-BOARD_DIMENSION = screen.window_width() * 0.75
+# for proper scaling with many dimensions, if the width is substantially more, go by the height of the screen
+if (screen.window_width()/screen.window_height() > 1.20):
+    # width of the board is equal to 95% of the screen height
+    BOARD_DIMENSION = screen.window_height()*0.95
+else:
+    # width of the board is equal to 75% of the screen width
+    BOARD_DIMENSION = screen.window_width()*0.75
 
 # dictionary that converts location num to a symbol
 SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
@@ -104,7 +110,8 @@ def draw_board():
     """
 
     # want to edit the global variables
-    global box_locations, board_turtles
+    global box_locations, board_turtles, buttons
+    del buttons[:]
 
     # Initiate turtle that will draw the board
     main_board = turtle.Turtle()
@@ -192,6 +199,11 @@ def draw_board():
 
         # reset x position each time a row is done (to the very left), move the turtle down one block
         main_board.setpos(-(BOARD_DIMENSION/2) - (screen.window_width()*0.1), (main_board.ycor() - (BOARD_DIMENSION/5)))
+
+    # create buttons on the main board to perform various actions, the offsets were calculated by eye and are relative
+    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.11, "Load Game", 'load_state()', screen.window_width()*0.20, screen.window_height()/36)
+    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.42, "Save Game", 'save_state()', screen.window_width()*0.20, screen.window_height()/36)
+    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.83, "Main Menu", 'draw_main_screen()', screen.window_width()*0.20, screen.window_height()/36)
 
 
 def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
@@ -772,7 +784,7 @@ def message_queue(to_write):
     MessagesTurtle.up()
 
     # reset the messages if it goes beyond the height of board dimension
-    if moveOffset < -(BOARD_DIMENSION/2):
+    if moveOffset < -(BOARD_DIMENSION/3.5):
         moveOffset = saved_offset
         MessagesTurtle.clear()
 
@@ -878,7 +890,7 @@ def load_state():
         screen.listen()
 
         # reset messages offset location
-        moveOffset = 70
+        moveOffset = BOARD_DIMENSION/2 - (text_height/0.7) - (penalty_text_height * 1.5)
         message_queue("Loaded Board")
         file_obj.close()
     except:
@@ -892,18 +904,21 @@ def save_state():
 
     :return:
     """
-    try:
-        file_obj = open("saved_board.apoc", "w")
-        # the file is just a single line defining the state
-        line_to_write = str(penalty_points[0]) + " " + str(penalty_points[1])
-        for line in board:
-            line_to_write += "\n" + " ".join(line)
-        file_obj.write(line_to_write)
-        message_queue("Saved Board")
-        file_obj.close()
-    except:
-        print("There was an error saving the board")
-        message_queue("Error Saving")
+    # we don't want to let them save while a pawn is redeploying (can cause game mechanics issues)
+    if highlight_params[3] == False:
+        try:
+            file_obj = open("saved_board.apoc", "w")
+            # the file is just a single line defining the state
+            line_to_write = str(penalty_points[0]) + " " + str(penalty_points[1])
+            for line in board:
+                line_to_write += "\n" + " ".join(line)
+            file_obj.write(line_to_write)
+            message_queue("Saved Board")
+            file_obj.close()
+        except:
+            print("There was an error saving the board")
+            message_queue("Error Saving")
+
 
 
 def knight_amount(board_state, player):
@@ -1021,14 +1036,9 @@ def onclick_board_handler(x, y):
                                     ai_val = False
                             print("DONE GENERATING MINIMAX AI MOVE")
 
-
-
                             player_validity = valid_move((highlight_params[2] - 1), (highlight_params[1] - 1), (row - 1), (column - 1), "p")
                             player_type_val = get_piece((highlight_params[2] - 1), (highlight_params[1] - 1))
                             print(player_validity)
-
-                            # generate the AI move
-                            #ai_val = ai_move()
 
                             # check whether to upgrade the pawn to knight for the AI
                             if ai_val != False and ai_type_val == "P" and ai_val[2] == 4 and knight_amount(board, 0) < 2:
@@ -1156,7 +1166,9 @@ def onclick_board_handler(x, y):
 
             column = 0
     else:
-        print("Didn't click inside the board")
+        for i in buttons:
+            if (i[0] + i[2]) > x > i[0] and i[1] > y > (i[1] - i[3]):
+                exec(i[5])
 
 
 def game_end_screen(winner):
@@ -1197,7 +1209,7 @@ def game_end_screen(winner):
     print(buttons)
 
 
-def draw_button(x, y, text, code_exec, width=0):
+def draw_button(x, y, text, code_exec, width=0, font_size=screen.window_height()/25):
     """
     Draws a button centered at the specified x, y point with the text passed in as a parameter and also handles
     configuring the click events for it
@@ -1217,7 +1229,7 @@ def draw_button(x, y, text, code_exec, width=0):
     init_x = width_turtle.xcor()
 
     # set default text font size
-    init_y = int(screen.window_height()/25)
+    init_y = int(font_size)
 
     width_turtle.write(text, move=True, align="left", font=("Ariel", init_y))
     width_turtle.clear()

@@ -29,7 +29,7 @@ Task 9:
 
 Task 10 (Optional):
 * Add sounds and music to the game that changes based upon the difficulty played
-* Remove the text at the top of the game board
+* ~~Remove the text at the top of the game board~~ Completed in Task 9
 * Add the destroyed pieces of AI and the player to the bottom of the game board
 # How to Use
 

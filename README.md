@@ -32,6 +32,11 @@ Task 10 (Optional):
 * ~~Remove the text at the top of the game board~~ Completed in Task 9
 * Add the destroyed pieces of AI and the player to the bottom of the game board
 
+# Bugs
+
+Current Bugs:
+* If the AI is redeploying a pawn and kills one of yours on the last rank, it won't kill it and will just teleport to its desired redeploy location
+
 # How to Use
 
 The most up to date version will be the python file with the greatest task number. Fictious tasks will be created after task 8 (what the TA assigns) so that we can keep proper version control

@@ -58,7 +58,7 @@ board_turtles = [[0, 0, 0, 0, 0],
 # Initiate the screen with bgcolor
 screen = turtle.Screen()
 screen.bgcolor("#4A4A4A")
-#screen.setup(width=400, height=1000)
+#screen.setup(width=1000, height=400)
 screen.title("Apocalypse")
 
 PenaltyTurtle = turtle.Turtle()
@@ -117,8 +117,11 @@ def draw_board():
     """
 
     # want to edit the global variables
-    global box_locations, board_turtles, buttons
+    global box_locations, board_turtles, buttons, moveOffset, saved_offset
     del buttons[:]
+
+    moveOffset = BOARD_DIMENSION/2 - (text_height/0.7) - (penalty_text_height * 1.5)
+    saved_offset = moveOffset
 
     # Initiate turtle that will draw the board
     main_board = turtle.Turtle()

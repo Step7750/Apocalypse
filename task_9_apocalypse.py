@@ -27,7 +27,10 @@ import copy       # for deep copies (for the minimax ai)
 
 # set the score weighting for pawns and knights
 knight_points = 1
-pawn_points = 3
+pawn_points = 1
+
+# if one pawn left, value it much higher
+# algorithm that values the pieces dynamically
 
 # declare all of the global variables
 
@@ -63,21 +66,14 @@ screen.title("Apocalypse")
 
 PenaltyTurtle = turtle.Turtle()
 PenaltyTurtle.hideturtle()
-penaltyTurtleAI = turtle.Turtle()
-penaltyTurtleAI.hideturtle()
 MessagesTurtle = turtle.Turtle()
 MessagesTurtle.hideturtle()
 
 # amount of moves the AI thinks forward (computation gets exponential). Anything over 7 will take a very long time....
-depth_amt = 6
+depth_amt = 7
 
 # for proper scaling with many dimensions, if the width is substantially more, go by the height of the screen
-if (screen.window_width()/screen.window_height() > 1.20):
-    # width of the board is equal to 95% of the screen height
-    BOARD_DIMENSION = screen.window_height()*0.95
-else:
-    # width of the board is equal to 75% of the screen width
-    BOARD_DIMENSION = screen.window_width()*0.75
+BOARD_DIMENSION = screen.window_width()*0.75
 
 # dictionary that converts location num to a symbol
 SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
@@ -101,8 +97,6 @@ saved_offset = moveOffset
 
 # define dynamic scaling variable that stores whether to scale by height or width
 scaling_value = screen.window_width()
-if screen.window_height() < screen.window_width():
-    scaling_value = screen.window_height()
 
 
 def print_board():
@@ -450,6 +444,10 @@ def combine_moves(board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     :return:
     """
     board_state = copy.deepcopy(board_state_val)
+
+    player_val = copy.copy(board_state[x][y])
+    ai_val = copy.copy(board_state[x2][y2])
+
     if new_x == new_x2 and new_y == new_y2:
 
         piece_type1 = board_state[x][y]
@@ -475,24 +473,19 @@ def combine_moves(board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     else:
         # the pieces are moving to different locations, simultaneous movement does not matter
 
-        player_val = copy.copy(board_state[x][y])
-        ai_val = copy.copy(board_state[x2][y2])
-
         board_state[new_x][new_y] = player_val
         board_state[x][y] = "W"
 
         board_state[new_x2][new_y2] = ai_val
         board_state[x2][y2] = "W"
 
-        if ai_val == "P" and new_x == 4:
-            # reached last rank, process it
-            board_state[x2][y2] = "K"
+    if ai_val == "P" and new_x2 == 4:
+        # reached last rank, process it
+        board_state[new_x2][new_y2] = "K"
 
-        if ai_val == "p" and new_x == 0:
-            # reached last rank, process it
-            board_state[x2][y2] = "k"
-
-        # check whether they reached the last rank
+    if player_val == "p" and new_x == 0:
+        # reached last rank, process it
+        board_state[new_x][new_y] = "k"
 
     # check whether we need to upgrade pawns to knights
 
@@ -510,6 +503,12 @@ def combine_single_move(board_state_val, x, y, new_x, new_y):
     board_state[new_x][new_y] = player_val
     board_state[x][y] = "W"
     # check whether we need to upgrade pawns to knights
+    if new_x == 4 and player_val == "P":
+        #print("Upgraded Single knight")
+        board_state[new_x][new_y] = "K"
+        #print(board_state)
+    elif new_x == 0 and player_val == "p":
+        board_state[new_x][new_y] = "k"
 
     return board_state
 
@@ -519,20 +518,19 @@ def maximize(depth, board_state, alpha, beta, force_reply=0):
     Maximizes nodes in the depth level for the AI
     Implements alpha beta pruning
     """
-    alpha = copy.copy(alpha)
-    beta = copy.copy(beta)
     board_copy = copy.deepcopy(board_state)
     best_move = []
     if depth == 0:
         # reached end of depth level, send back the score
-        return ai_score(board_copy)
+        return -ai_score(board_copy)
     moves = possible_moves(board_copy, 0)
     for move in moves:
         move_board = copy.deepcopy(board_copy)
         cur_score = minimize(depth - 1, move_board, move, alpha, beta)
+        print("Depth " + str(depth) + " Move with score " + str(cur_score) + "  Move: " + str(move))
         if force_reply == 1:
-            print("Move with score " + str(cur_score) + "  Move: " + str(move))
-        if cur_score >= beta:
+            print("^ Top Level Move ----")
+        if cur_score > beta:
             if force_reply == 1:
                 return [[move], beta]
             else:
@@ -540,7 +538,7 @@ def maximize(depth, board_state, alpha, beta, force_reply=0):
         if cur_score > alpha and force_reply == 0:
             # reset alpha if this isn't a forced reply (top of tree)
             alpha = cur_score
-        if force_reply == 1 and cur_score >= alpha:
+        if force_reply == 1 and cur_score > alpha:
             if cur_score > alpha:
                 # score is higher, empty out the current moves
                 print("Score is higher, emptying list")
@@ -563,8 +561,6 @@ def minimize(depth, board_state, prev_move, alpha, beta):
 
     board_state is a list in the following structure (board (1D list), penalty points (1D List))
     """
-    alpha = copy.copy(alpha)
-    beta = copy.copy(beta)
     board_copy = copy.deepcopy(board_state)
     if depth == 0:
         # put together the move with the board and send back the score evaluation
@@ -578,11 +574,85 @@ def minimize(depth, board_state, prev_move, alpha, beta):
         move_board = copy.deepcopy(board_copy)
         move_board = combine_moves(move_board, move[0], move[1], move[2], move[3], prev_move[0], prev_move[1], prev_move[2], prev_move[3])
         cur_score = maximize(depth - 1, move_board, alpha, beta)
+        print("Depth " + str(depth) + " Minimize Move with score " + str(cur_score) + "  Move: " + str(move))
         if cur_score <= alpha:
             return alpha
         if cur_score < beta:
             beta = cur_score
     return beta
+
+
+def minimax(board_state, depth, MaxPlayer, prev_move=0, top_tree=False):
+    board_copy = copy.deepcopy(board_state)
+    if depth == 0 or ai_score(board_state) == float("-infinity") or ai_score(board_state) == float("-infinity"):
+        if prev_move != 0:
+            board_copy = combine_single_move(board_copy, prev_move[0], prev_move[1], prev_move[2], prev_move[3])
+        return ai_score(board_copy)
+    if MaxPlayer:
+        best_val = float("-infinity")
+        moves = possible_moves(board_copy, 0)
+        if top_tree:
+            best_move = []
+        for move in moves:
+            val = minimax(board_copy, depth - 1, False, move)
+            if val > best_val:
+                best_move = move
+            best_val = max(best_val, val)
+        if top_tree:
+            return [[best_move], best_val]
+        else:
+            return best_val
+    else:
+        # min player
+        best_val = float("infinity")
+        moves = possible_moves(board_copy, 1)
+        for move in moves:
+            move_board = copy.deepcopy(board_copy)
+            move_board = combine_moves(move_board, move[0], move[1], move[2], move[3], prev_move[0], prev_move[1], prev_move[2], prev_move[3])
+            val = minimax(move_board, depth - 1, True)
+            best_val = min(best_val, val)
+        return best_val
+
+
+def alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, top_tree=False):
+    board_copy = copy.deepcopy(board_state)
+    if depth == 0 or ai_score(board_state) == float("-infinity") or ai_score(board_state) == float("-infinity"):
+        if prev_move != 0:
+            board_copy = combine_single_move(board_copy, prev_move[0], prev_move[1], prev_move[2], prev_move[3])
+        return ai_score(board_copy)
+    if MaxPlayer:
+        best_val = float("-infinity")
+        moves = possible_moves(board_copy, 0)
+
+        if top_tree:
+            best_move = []
+
+        for move in moves:
+            val = alphabeta(board_copy, depth - 1, False, alpha, beta, move)
+            if val > best_val:
+                best_move = move
+            best_val = max(best_val, val)
+            alpha = max(best_val, alpha)
+
+            if beta <= alpha:
+                break
+        if top_tree:
+            return [[best_move], best_val]
+        else:
+            return best_val
+    else:
+        # min player
+        best_val = float("infinity")
+        moves = possible_moves(board_copy, 1)
+        for move in moves:
+            move_board = copy.deepcopy(board_copy)
+            move_board = combine_moves(move_board, move[0], move[1], move[2], move[3], prev_move[0], prev_move[1], prev_move[2], prev_move[3])
+            val = alphabeta(move_board, depth - 1, True, alpha, beta)
+            best_val = min(best_val, val)
+            beta = min(best_val, beta)
+            if beta <= alpha:
+                break
+        return best_val
 
 
 def possible_moves(board_state, player_type):
@@ -963,7 +1033,8 @@ def onclick_board_handler(x, y):
     """
     global board
     # check whether they clicked inside the board
-    if box_locations[0][0][0] < x < (box_locations[4][4][0] + BOARD_DIMENSION/5) and (box_locations[4][4][1] - BOARD_DIMENSION/5) < y < box_locations[0][0][1]:
+    if box_locations[0][0][0] < x < (box_locations[4][4][0] + BOARD_DIMENSION/5) and \
+                            (box_locations[4][4][1] - BOARD_DIMENSION/5) < y < box_locations[0][0][1]:
         # they clicked inside, let's go!
 
         global highlight_params, box_selected, board
@@ -994,41 +1065,25 @@ def onclick_board_handler(x, y):
 
                     if column != highlight_params[1] or row != highlight_params[2]:
 
-                        if box_selected == 1  and highlight_params[3] == False:
+                        if box_selected == 1 and not highlight_params[3]:
                             # move the piece, a move was made
 
                             # we don't want to let them click again while the AI move is being generated
                             screen.onclick(None)
                             # generate the AI move
                             print("GENERATING MINIMAX AI MOVE")
-                            generated_ai = maximize(depth_amt, copy.deepcopy(board), -float("inf"), float("inf"), 1)
+                            generated_ai = alphabeta(copy.deepcopy(board), depth_amt, True, float("-infinity"), float("infinity"), 0, True)
 
-                            # if all the combinations are -inf and the depth level is very high, try to reduce the depth level and prolong the game
-                            if generated_ai[1] == float("-infinity") and depth_amt >= 5:
-                                print("Regenerating move with lower depth level since the AI thinks it will always die")
-                                generated_ai = maximize(3, copy.deepcopy(board), -float("inf"), float("inf"), 1)
+                            print(generated_ai)
+                            if generated_ai[1] == float("-infinity"):
+                                print("Doing random move to the board")
+                                generated_ai[0] = possible_moves(board, 0)[0]
                             ai_val = generated_ai[0]
                             print("AI MOVES: " + str(ai_val))
+
                             if len(ai_val) == 1:
                                 ai_val = ai_val[0]
-                            elif len(ai_val) > 1:
-                                # there are multiple choices with the same score value that was calculated
-                                # check the immediate best move based upon score
-                                # if the player makes a deviation from their perfect possible move set, then the Ai will be at an advantage
-                                best_immediate_score = float("-infinity")
-                                best_immediate_move = ai_val[0]
-                                for aimove in ai_val:
-                                    # make the move
-                                    board_copy = copy.deepcopy(board)
-                                    board_copy = combine_single_move(board_copy, aimove[0], aimove[1], aimove[2], aimove[3])
-                                    cur_score = ai_score(board_copy)
-                                    print("Score of " + str(cur_score))
-                                    if cur_score > best_immediate_score:
-                                        print("Resetting value")
-                                        best_immediate_move = aimove
-                                        best_immediate_score = cur_score
-                                ai_val = best_immediate_move
-                                print("Best Immediate Score: " + str(best_immediate_score))
+
                             print("==============\n\nAI Results:\nMove: " + str(ai_val))
                             print(generated_ai)
                             if len(ai_val) > 0:
@@ -1415,6 +1470,17 @@ def main_menu():
             |_|                    |__/|_|
         """)
 
+    global scaling_value, BOARD_DIMENSION
+
+    # for proper scaling for relative values, if the height is less than the width, go based off of that
+    if screen.window_height() < screen.window_width():
+        scaling_value = screen.window_height()
+
+    # If there is a high ratio of width to height, make the board dimensions based upon the height
+    if (screen.window_width()/screen.window_height() > 1.20):
+        # width of the board is equal to 95% of the screen height
+        BOARD_DIMENSION = screen.window_height()*0.95
+
     draw_main_screen()
     turtle.done()
 
@@ -1479,7 +1545,7 @@ def choose_difficulty():
     main_turtle.write("Difficulty", True, align="center", font=("Ariel", int(screen.window_width()/12)))
     draw_button(0, -(screen.window_height()/20), "Easy", 'modify_difficulty(1); new_game()', screen.window_width()/3)
     draw_button(0, -(screen.window_height()/7), "Medium", 'modify_difficulty(3); new_game()', screen.window_width()/3)
-    draw_button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(6); new_game()', screen.window_width()/3)
+    draw_button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(5); new_game()', screen.window_width()/3)
 
 
 def modify_difficulty(level):

@@ -53,7 +53,7 @@ board_turtles = [[0, 0, 0, 0, 0],
 # Initiate the screen with bgcolor
 screen = turtle.Screen()
 screen.bgcolor("#4A4A4A")
-#screen.setup(width=600, height=600)
+#screen.setup(width=400, height=1000)
 screen.title("Apocalypse")
 
 PenaltyTurtle = turtle.Turtle()
@@ -201,9 +201,9 @@ def draw_board():
         main_board.setpos(-(BOARD_DIMENSION/2) - (screen.window_width()*0.1), (main_board.ycor() - (BOARD_DIMENSION/5)))
 
     # create buttons on the main board to perform various actions, the offsets were calculated by eye and are relative
-    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.11, "Load Game", 'load_state()', screen.window_width()*0.20, screen.window_height()/36)
-    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.42, "Save Game", 'save_state()', screen.window_width()*0.20, screen.window_height()/36)
-    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.83, "Main Menu", 'draw_main_screen()', screen.window_width()*0.20, screen.window_height()/36)
+    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.13, "Load Game", 'load_state()', screen.window_width()*0.20, screen.window_width()/36)
+    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.50, "Save Game", 'save_state()', screen.window_width()*0.20, screen.window_width()/36)
+    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/3.02, "Main Menu", 'draw_main_screen()', screen.window_width()*0.20, screen.window_width()/36)
 
 
 def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
@@ -920,7 +920,6 @@ def save_state():
             message_queue("Error Saving")
 
 
-
 def knight_amount(board_state, player):
     """
     Returns the amount knights a player has
@@ -1209,7 +1208,7 @@ def game_end_screen(winner):
     print(buttons)
 
 
-def draw_button(x, y, text, code_exec, width=0, font_size=screen.window_height()/25):
+def draw_button(x, y, text, code_exec, width=0, font_size=screen.window_width()/25):
     """
     Draws a button centered at the specified x, y point with the text passed in as a parameter and also handles
     configuring the click events for it
@@ -1373,9 +1372,9 @@ def draw_main_screen():
     main_menu_turtle._tracer(False)
 
     main_menu_turtle.sety(screen.window_height()/5)
-    main_menu_turtle.write("Apocalypse", True, align="center", font=("Ariel", int(screen.window_height()/8)))
+    main_menu_turtle.write("Apocalypse", True, align="center", font=("Ariel", int(screen.window_width()/8)))
     main_menu_turtle.home()
-    main_menu_turtle.write("♘ ♙ ♞ ♟", True, align="center", font=("Ariel", int(screen.window_height()/10)))
+    main_menu_turtle.write("♘ ♙ ♞ ♟", True, align="center", font=("Ariel", int(screen.window_width()/10)))
     main_menu_turtle.setposition((screen.window_width() / 2), -((screen.window_height() / 2) - 10))
 
 
@@ -1463,7 +1462,7 @@ def choose_difficulty():
     main_turtle._tracer(False)
     main_turtle.up()
     main_turtle.setpos(0, screen.window_height()/20)
-    main_turtle.write("Difficulty", True, align="center", font=("Ariel", int(screen.window_height()/12)))
+    main_turtle.write("Difficulty", True, align="center", font=("Ariel", int(screen.window_width()/12)))
     draw_button(0, -(screen.window_height()/20), "Easy", 'modify_difficulty(1); new_game()', screen.window_width()/3)
     draw_button(0, -(screen.window_height()/7), "Medium", 'modify_difficulty(3); new_game()', screen.window_width()/3)
     draw_button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(6); new_game()', screen.window_width()/3)

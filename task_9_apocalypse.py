@@ -404,29 +404,33 @@ def ai_score(board_state):
     :return: **numerical** returns score of the current board for the AI
     """
     current_score = 0
+    current_pawns = 0
     for row in range(5):
         for column in range(5):
             if board_state[row][column] == "K":
-                current_score += 7
-            elif board_state[row][column] == "P":
                 current_score += 1
+            elif board_state[row][column] == "P":
+                current_score += 2
+                current_pawns += 1
 
     player_score = 0
+    player_pawns = 0
     for row in range(5):
         for column in range(5):
             if board_state[row][column] == "k":
-                player_score += 7
-            elif board_state[row][column] == "p":
                 player_score += 1
+            elif board_state[row][column] == "p":
+                player_score += 2
+                player_pawns += 1
     if len(possible_moves(board_state, 0)) == 0:
         return float("-infinity")
-    if current_score == 0 and player_score == 0:
+    if current_pawns == 0 and player_pawns == 0:
         # stalemate, return value of 0
         return 0
-    if current_score == 0:
+    if current_pawns == 0:
         # the player won
         return float("-infinity")
-    elif player_score == 0:
+    elif player_pawns == 0:
         # the ai won
         return float("infinity")
     else:
@@ -724,12 +728,12 @@ def game_over():
     ai_pieces = 0
     player_pieces = 0
 
-    # don't want to include the first two entries since they define the amount of infractions for that player
+    # Check how many pawns each has, if they are all gone, they lose
     for row in board:
         for column in row:
-            if column == "K" or column == "P":
+            if column == "P":
                 ai_pieces += 1
-            elif column == "k" or column == "p":
+            elif column == "p":
                 player_pieces += 1
     if ai_pieces == 0 and player_pieces == 0:
         return 2

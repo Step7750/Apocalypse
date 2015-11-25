@@ -1,8 +1,30 @@
+"""
+CPSC 231 Group Project - Apocalypse 095
+
+Play the game of Apocalypse! A simultaneous game based upon the principles of chess.
+
+The rules can be found here: https://en.wikipedia.org/wiki/Apocalypse_(chess_variant)
+
+
+Created by: Stepan Fedorko-Bartos, Khesualdo Condori Barykin, Cameron Davies, Michael Shi
+
+Features:
+- Fully interactive GUI to play Apocalypse
+- Dark Theme Interface
+- Main Menu Screen
+- Saving and Loading game states
+- Variable levels of AI difficulty (Can you beat it on hard?)
+- Advanced MiniMax AI w/ Alpha Beta Pruning (that handles the simultaneous nature of Apocalypse)
+- Uses Recursion for the MiniMax AI
+
+"""
+
 import turtle
 import platform   # used to know what the scaling should be
-import copy # for deep copies
+import copy       # for deep copies (for the minimax ai)
 
-# declare all of the main variables
+
+# declare all of the global variables
 
 board = [["K", "P", "P", "P", "K"],
         ["P", "W", "W", "W", "P"],
@@ -10,11 +32,10 @@ board = [["K", "P", "P", "P", "K"],
         ["p", "W", "W", "W", "p"],
         ["k", "p", "p", "p", "k"]]
 
+# penalty points for each player (ai, player)
 penalty_points = [0, 0]
-iteration_amt = 0
 
-
-# X, Y Coords for each box (to make our lives easier for onclick events)
+# X, Y coords for each board box (to make our lives easier for onclick events)
 box_locations = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
                  [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
                  [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
@@ -35,21 +56,17 @@ screen.bgcolor("#4A4A4A")
 #screen.setup(width=1000, height=1000)
 screen.title("Apocalypse")
 
-penaltyTurtleP = turtle.Turtle()
-penaltyTurtleP.hideturtle()
+PenaltyTurtle = turtle.Turtle()
+PenaltyTurtle.hideturtle()
 penaltyTurtleAI = turtle.Turtle()
 penaltyTurtleAI.hideturtle()
-movesTurtle = turtle.Turtle()
-movesTurtle.hideturtle()
-moveOffset = 70
+MessagesTurtle = turtle.Turtle()
+MessagesTurtle.hideturtle()
 
 
 # amount of moves the AI thinks forward (computation gets exponential). Anything over 7 will take a very long time....
 depth_amt = 6
 
-
-
-# Constants created by Khesualdo, they store the appropriate board dimensions and a dict defining the conversion from int to symbol
 
 # width of the board is equal to 75% of the screen width
 BOARD_DIMENSION = screen.window_width() * 0.75
@@ -58,40 +75,21 @@ BOARD_DIMENSION = screen.window_width() * 0.75
 SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
 
 # store the state of the highlighting of boxes
-
 highlight_params = [0, 0, 0, False, 0]
 box_selected = 0
 
 # stores coords of created buttons
 buttons = []
 
+# stores text height for the queue messages
+text_height = int(BOARD_DIMENSION/7.5)
 
-# CPSC 231 Group Project
+# stores text height for strings related to the penalty score board
+penalty_text_height = int(BOARD_DIMENSION/50)
 
-# Welcome message by Cam.  Task Given:  Add a welcome message to the turtle screen.
-def welcome_text(screen):
-
-    welcome = turtle.Turtle()
-    welcome2 = turtle.Turtle()
-    height = screen.window_height() #Calculate the height of the canvas
-    ycord = height/2 - (height * 0.030) #Determine the margin for the text to be placed
-    ycord2 = height/2 - (height * 0.055)
-
-    # Hide the turtle, lift the pen up, and increase speed
-    welcome.hideturtle()
-    welcome.penup()
-    welcome.speed(0)
-
-    welcome2.hideturtle()
-    welcome2.penup()
-    welcome2.speed(0)
-
-    # Position the text accordingly, and display it in the center.
-    welcome.setposition(x=0, y=ycord)
-    welcome.write("Welcome to Apocalypse!!", move=False, align="center", font=("Arial", 18))
-    welcome2.setposition(x=0, y=ycord2)
-    welcome2.write("This is a simultaneous turn game which is based upon rules of chess", move=False, align="center",
-                   font=("Arial", 18))
+# creates the move offset that is needed to increment by everytime a new message is printed (creates extra var to save it)
+moveOffset = BOARD_DIMENSION/2 - (text_height/0.7) - (penalty_text_height * 1.5)
+saved_offset = moveOffset
 
 
 def print_board():
@@ -100,7 +98,6 @@ def print_board():
         print(board[i])
 
 
-# Stepan's function
 def draw_board():
     """
     This function will draw the game board onto the screen based upon the constants BOARD_DIMENSION and SYMBOL_DICT
@@ -108,9 +105,6 @@ def draw_board():
 
     # want to edit the global variables
     global box_locations, board_turtles
-
-    # Execute Cam's function to draw the welcome text
-    welcome_text(screen)
 
     # Initiate turtle that will draw the board
     main_board = turtle.Turtle()
@@ -122,8 +116,8 @@ def draw_board():
     # disable animations, this got really annoying
     main_board._tracer(False)
 
-    # center the board, -10 is a static offset
-    main_board.goto(-(BOARD_DIMENSION/2) - 70, BOARD_DIMENSION/2)
+    # Make the board 80% width and 10% to the left
+    main_board.goto(-(BOARD_DIMENSION/2) - (screen.window_width()*0.1), BOARD_DIMENSION/2)
 
     # create outer rectangle
     main_board.down()
@@ -134,7 +128,7 @@ def draw_board():
     main_board.penup()
 
     # move turtle back to top left of the board
-    main_board.goto(-(BOARD_DIMENSION/2) - 70, BOARD_DIMENSION/2)
+    main_board.goto(-(BOARD_DIMENSION/2) - (screen.window_width()*0.1), BOARD_DIMENSION/2)
 
     # iterate through each box and draw it
     for row in range(0, 5):
@@ -197,14 +191,14 @@ def draw_board():
             main_board.setx(main_board.xcor() + (BOARD_DIMENSION/5))
 
         # reset x position each time a row is done (to the very left), move the turtle down one block
-        main_board.setpos(-(BOARD_DIMENSION/2) - 70, (main_board.ycor() - (BOARD_DIMENSION/5)))
+        main_board.setpos(-(BOARD_DIMENSION/2) - (screen.window_width()*0.1), (main_board.ycor() - (BOARD_DIMENSION/5)))
 
 
-# Michael's function
 def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     """
     This function handles the movement process for both pieces to make sure they are simultaneous
     x2, y2, new_x2, new_y2 is for the AI
+    x, y, new_x, new_y is for the player
     """
     global board
     # check whether the destination is the same for both
@@ -216,19 +210,19 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
         if piece_type1 == "p" and piece_type2 == "P":
             # both pawns, delete both
             print("Both are pawns, detroying both")
-            delete_piece(x, y, board, board_turtles)
-            delete_piece(x2, y2, board, board_turtles)
+            delete_piece(x, y, board_turtles)
+            delete_piece(x2, y2, board_turtles)
         elif piece_type1 == "k" and piece_type2 == "K":
             print("Both are knights, detroying both")
-            delete_piece(x, y, board, board_turtles)
-            delete_piece(x2, y2, board, board_turtles)
+            delete_piece(x, y, board_turtles)
+            delete_piece(x2, y2, board_turtles)
         elif piece_type1 == "p" and piece_type2 == "K":
 
-            delete_piece(x, y, board, board_turtles)
+            delete_piece(x, y, board_turtles)
             # execute move for AI
             execute_move(x2, y2, new_x2, new_y2, SYMBOL_DICT[get_piece(y2, x2)])
         elif piece_type1 == "k" and piece_type2 == "P":
-            delete_piece(x2, y2, board, board_turtles)
+            delete_piece(x2, y2, board_turtles)
             # execute move for AI
             execute_move(x, y, new_x, new_y, SYMBOL_DICT[get_piece(y, x)])
     else:
@@ -252,7 +246,16 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
 
 def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
     """
-    Executes a given move, rather than just handling them
+    Executes a given move on the board (modifying values, drawing the board)
+
+    :param x: **int** current piece x coord
+    :param y: **int** current piece y coord
+    :param newx: **int** new piece x coord
+    :param newy: **int** new piece y coord
+    :param symbol: **string** Symbol of the piece you're moving
+    :param piece_code: **int** Piece value (on the board) to use (optional)
+    :param force_delete: **int** Force delete the previous piece on the board (optional)
+    :return:
     """
 
     global highlight_params, box_selected, board
@@ -269,10 +272,10 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
     test_symbol = SYMBOL_DICT[get_piece(y, x)]
     if test_symbol == symbol and force_delete == 3:
         # the other player did not move into our old location, we can delete whatever is there
-        delete_piece(x, y, board, board_turtles)
+        delete_piece(x, y, board_turtles)
     if force_delete == True:
         print("Force deleting the piece")
-        delete_piece(x, y, board, board_turtles)
+        delete_piece(x, y, board_turtles)
 
     # Get the turtle stored for the new block
     new_turtle = board_turtles[new_y][new_x]
@@ -292,6 +295,16 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
 
 
 def valid_move(x, y, newx, newy, playername):
+    """
+    Checks whether a given move is valid or not for playername
+
+    :param x: **int** current piece x coord
+    :param y: **int** current piece y coord
+    :param newx: **int** new piece x coord
+    :param newy: **int** new piece y coord
+    :param playername: **string** playername is p or a depending on player or ai
+    :return:
+    """
     # x, y is current piece that wants to move to newx, newy
     # playername is p or a depending on player or ai
     knight_moves = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]
@@ -367,6 +380,12 @@ def valid_move(x, y, newx, newy, playername):
 
 
 def ai_score(board_state):
+    """
+    Computes the score of the board for the AI
+
+    :param board_state: multidimensional list defining the board state
+    :return: **numerical** returns score of the current board for the AI
+    """
     current_score = 0
     for row in range(5):
         for column in range(5):
@@ -384,14 +403,14 @@ def ai_score(board_state):
                 player_score += 1
     if len(possible_moves(board_state, 0)) == 0:
         return float("-infinity")
+    if current_score == 0 and player_score == 0:
+        # stalemate, return value of 0
+        return 0
     if current_score == 0:
         # the player won
-        print("Player WON")
         return float("-infinity")
     elif player_score == 0:
         # the ai won
-        print("AI WON")
-        print(board_state)
         return float("infinity")
     else:
         return current_score-player_score
@@ -540,7 +559,6 @@ def minimize(depth, board_state, prev_move, alpha, beta):
     return beta
 
 
-
 def possible_moves(board_state, player_type):
     """
     Generates possible AI moves given a board state
@@ -627,8 +645,7 @@ def possible_moves(board_state, player_type):
     return possible_moves
 
 
-# Michael's function
-def delete_piece(x, y, board, board_turtles):
+def delete_piece(x, y, board_turtles):
     """
     This function will remove a board piece, and do the proper logic to remove the current location of it
     """
@@ -740,24 +757,8 @@ def displayMove(x, y, new_x, new_y):
     :param new_y: **int** y coord of the new piece position
     :return:
     """
-
-    global moveOffset
-
-    # reset the messages if it goes beyond the height of board dimension
-    if (moveOffset > BOARD_DIMENSION):
-        moveOffset = 70
-        movesTurtle.clear()
-
-    moveOffset += 15
-    movesTurtle.speed(0)
-    movesTurtle.ht()
-    movesTurtle.color("grey")
-
-    movesTurtle.up()
-    movesTurtle.goto((BOARD_DIMENSION/2 - 3), (BOARD_DIMENSION/2 - moveOffset))
-    movesTurtle.down()
-    to_write = str(x+1) + ", " + str(y+1) + " to " + str(new_x+1) + ", " + str(new_y+1)
-    movesTurtle.write(to_write, False, align="center", font=("Ariel", int(BOARD_DIMENSION/35)))
+    to_write = str(y+1) + ", " + str(x+1) + " to " + str(new_y+1) + ", " + str(new_x+1)
+    message_queue(to_write)
 
 
 def message_queue(to_write):
@@ -768,21 +769,20 @@ def message_queue(to_write):
     :return:
     """
     global moveOffset
+    MessagesTurtle.up()
 
     # reset the messages if it goes beyond the height of board dimension
-    if moveOffset > BOARD_DIMENSION:
-        moveOffset = 70
-        movesTurtle.clear()
+    if moveOffset < -(BOARD_DIMENSION/2):
+        moveOffset = saved_offset
+        MessagesTurtle.clear()
 
-    moveOffset += 15
-    movesTurtle.speed(0)
-    movesTurtle.ht()
-    movesTurtle.color("grey")
+    moveOffset -= int(BOARD_DIMENSION/40) * 1.25
+    MessagesTurtle._tracer(False)
+    MessagesTurtle.color("grey")
 
-    movesTurtle.up()
-    movesTurtle.goto((BOARD_DIMENSION/2 - 3), (BOARD_DIMENSION/2 - moveOffset))
-    movesTurtle.down()
-    movesTurtle.write(to_write, False, align="center", font=("Ariel", int(BOARD_DIMENSION/35)))
+    MessagesTurtle.goto(BOARD_DIMENSION/2 - screen.window_width() * 0.08, moveOffset)
+    MessagesTurtle.write(to_write, move=True, align="left", font=("Ariel", int(BOARD_DIMENSION/40)))
+    moveOffset = MessagesTurtle.ycor()
 
 
 def penaltyCount():
@@ -791,27 +791,56 @@ def penaltyCount():
 
     :return:
     """
+    # height of the text
+    PenaltyTurtle.up()
+    PenaltyTurtle.clear()
 
-    penaltyTurtleP.undo()
-    penaltyTurtleAI.undo()
+    PenaltyTurtle.color("grey")
 
-    penaltyTurtleP.speed(0)
-    penaltyTurtleP.ht()
-    penaltyTurtleP.color("grey")
+    if platform.system() == "Windows":
+        #button_turtle.setpos(x, y - (init_y/1.4))
+        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (penalty_text_height/0.8))
+    else:
+        #button_turtle.setpos(x, y - (init_y/1.65))
+        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (penalty_text_height/1))
 
-    penaltyTurtleAI.speed(0)
-    penaltyTurtleAI.ht()
-    penaltyTurtleAI.color("darkgrey")
 
-    penaltyTurtleP.up()
-    penaltyTurtleP.goto((BOARD_DIMENSION/2 - 35), (BOARD_DIMENSION/2 - int(BOARD_DIMENSION/6)))
-    penaltyTurtleP.down()
-    penaltyTurtleP.write(penalty_points[0], False, align="center", font=("Ariel", int(BOARD_DIMENSION/7)))
+    PenaltyTurtle.write("Penalty Points:", False, align="left", font=("Ariel", penalty_text_height))
 
-    penaltyTurtleAI.up()
-    penaltyTurtleAI.goto((BOARD_DIMENSION/2 + 25), (BOARD_DIMENSION/2 - int(BOARD_DIMENSION/6)))
-    penaltyTurtleAI.down()
-    penaltyTurtleAI.write(penalty_points[1], False, align="center", font=("Ariel", int(BOARD_DIMENSION/7)))
+    if platform.system() == "Windows":
+        #button_turtle.setpos(x, y - (init_y/1.4))
+        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (text_height/0.8))
+    else:
+        #button_turtle.setpos(x, y - (init_y/1.65))
+        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (text_height/1))
+
+
+    PenaltyTurtle.sety(PenaltyTurtle.ycor() - (penalty_text_height * 1.5))
+
+    PenaltyTurtle.color("grey")
+    PenaltyTurtle._tracer(False)
+
+    # save coords to write out the numbers along with centered strings that define AI or Player
+    # write out the player penalty amount and string
+    saved_y = PenaltyTurtle.ycor()
+    PenaltyTurtle.setx(BOARD_DIMENSION/2 - screen.window_width() * 0.08)
+    text_width = PenaltyTurtle.xcor()
+    PenaltyTurtle.write(penalty_points[0], move=True, align="left", font=("Ariel", text_height))
+    text_width = PenaltyTurtle.xcor() - text_width
+    saved_x = PenaltyTurtle.xcor()
+    PenaltyTurtle.setx(saved_x - text_width/2)
+    PenaltyTurtle.write("Player", False, align="center", font=("Ariel", penalty_text_height))
+    PenaltyTurtle.setpos(saved_x, saved_y)
+
+
+    # write out the ai penalty amount and string
+    PenaltyTurtle.setx(PenaltyTurtle.xcor() + screen.window_width() * 0.03)
+    text_width = PenaltyTurtle.xcor()
+    PenaltyTurtle.write(penalty_points[1], move=True, align="left", font=("Ariel", text_height))
+    text_width = PenaltyTurtle.xcor() - text_width
+    saved_x = PenaltyTurtle.xcor()
+    PenaltyTurtle.setx(saved_x - text_width/2)
+    PenaltyTurtle.write("AI", move=False, align="center", font=("Ariel", penalty_text_height))
 
 
 def load_state():
@@ -854,7 +883,7 @@ def load_state():
         file_obj.close()
     except:
         print("There was an error loading the board")
-        message_queue("Error Loading Board")
+        message_queue("Error Loading")
 
 
 def save_state():
@@ -874,7 +903,7 @@ def save_state():
         file_obj.close()
     except:
         print("There was an error saving the board")
-        message_queue("Error Saving Board")
+        message_queue("Error Saving")
 
 
 def knight_amount(board_state, player):
@@ -1166,8 +1195,6 @@ def game_end_screen(winner):
     # draw out the main menu button
     draw_button(0, -(screen.window_height()/20), "Main Menu", 'draw_main_screen()', screen.window_width()/3.5)
     print(buttons)
-
-
 
 
 def draw_button(x, y, text, code_exec, width=0):

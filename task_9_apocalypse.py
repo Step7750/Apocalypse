@@ -97,6 +97,11 @@ penalty_text_height = int(BOARD_DIMENSION/50)
 moveOffset = BOARD_DIMENSION/2 - (text_height/0.7) - (penalty_text_height * 1.5)
 saved_offset = moveOffset
 
+# define dynamic scaling variable that stores whether to scale by height or width
+scaling_value = screen.window_width()
+if screen.window_height() < screen.window_width():
+    scaling_value = screen.window_height()
+
 
 def print_board():
     print("Board:")
@@ -201,9 +206,9 @@ def draw_board():
         main_board.setpos(-(BOARD_DIMENSION/2) - (screen.window_width()*0.1), (main_board.ycor() - (BOARD_DIMENSION/5)))
 
     # create buttons on the main board to perform various actions, the offsets were calculated by eye and are relative
-    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.13, "Load Game", 'load_state()', screen.window_width()*0.20, screen.window_width()/36)
-    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.50, "Save Game", 'save_state()', screen.window_width()*0.20, screen.window_width()/36)
-    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/3.02, "Main Menu", 'draw_main_screen()', screen.window_width()*0.20, screen.window_width()/36)
+    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.13, "Load Game", 'load_state()', screen.window_width()*0.20, scaling_value/36)
+    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.50, "Save Game", 'save_state()', screen.window_width()*0.20, scaling_value/36)
+    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/3.02, "Main Menu", 'draw_main_screen()', screen.window_width()*0.20, scaling_value/36)
 
 
 def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
@@ -1204,11 +1209,11 @@ def game_end_screen(winner):
     end_screen_turtle.write(text_write, move=False, align="center", font=("Arial", int(BOARD_DIMENSION/8)))
 
     # draw out the main menu button
-    draw_button(0, -(screen.window_height()/20), "Main Menu", 'draw_main_screen()', screen.window_width()/3.5)
+    draw_button(0, -(screen.window_height()/20), "Main Menu", 'draw_main_screen()', scaling_value/3.5)
     print(buttons)
 
 
-def draw_button(x, y, text, code_exec, width=0, font_size=screen.window_width()/25):
+def draw_button(x, y, text, code_exec, width=0, font_size=scaling_value/25):
     """
     Draws a button centered at the specified x, y point with the text passed in as a parameter and also handles
     configuring the click events for it
@@ -1372,9 +1377,9 @@ def draw_main_screen():
     main_menu_turtle._tracer(False)
 
     main_menu_turtle.sety(screen.window_height()/5)
-    main_menu_turtle.write("Apocalypse", True, align="center", font=("Ariel", int(screen.window_width()/8)))
+    main_menu_turtle.write("Apocalypse", True, align="center", font=("Ariel", int(scaling_value/8)))
     main_menu_turtle.home()
-    main_menu_turtle.write("♘ ♙ ♞ ♟", True, align="center", font=("Ariel", int(screen.window_width()/10)))
+    main_menu_turtle.write("♘ ♙ ♞ ♟", True, align="center", font=("Ariel", int(scaling_value/10)))
     main_menu_turtle.setposition((screen.window_width() / 2), -((screen.window_height() / 2) - 10))
 
 

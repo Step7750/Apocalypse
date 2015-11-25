@@ -24,6 +24,11 @@ import platform   # used to know what the scaling should be
 import copy       # for deep copies (for the minimax ai)
 
 
+
+# set the score weighting for pawns and knights
+knight_points = 1
+pawn_points = 3
+
 # declare all of the global variables
 
 board = [["K", "P", "P", "P", "K"],
@@ -62,9 +67,6 @@ penaltyTurtleAI = turtle.Turtle()
 penaltyTurtleAI.hideturtle()
 MessagesTurtle = turtle.Turtle()
 MessagesTurtle.hideturtle()
-
-print(screen.window_height())
-print(screen.window_width())
 
 # amount of moves the AI thinks forward (computation gets exponential). Anything over 7 will take a very long time....
 depth_amt = 6
@@ -408,9 +410,9 @@ def ai_score(board_state):
     for row in range(5):
         for column in range(5):
             if board_state[row][column] == "K":
-                current_score += 1
+                current_score += knight_points
             elif board_state[row][column] == "P":
-                current_score += 2
+                current_score += pawn_points
                 current_pawns += 1
 
     player_score = 0
@@ -418,9 +420,9 @@ def ai_score(board_state):
     for row in range(5):
         for column in range(5):
             if board_state[row][column] == "k":
-                player_score += 1
+                player_score += knight_points
             elif board_state[row][column] == "p":
-                player_score += 2
+                player_score += pawn_points
                 player_pawns += 1
     if len(possible_moves(board_state, 0)) == 0:
         return float("-infinity")

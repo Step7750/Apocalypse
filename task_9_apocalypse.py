@@ -27,7 +27,7 @@ import copy       # for deep copies (for the minimax ai)
 
 # set the score weighting for pawns and knights
 knight_points = 1
-pawn_points = 1
+pawn_points = 2
 
 # if one pawn left, value it much higher
 # algorithm that values the pieces dynamically
@@ -508,10 +508,13 @@ def combine_single_move(board_state_val, x, y, new_x, new_y):
 
 def minimax_alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, top_tree=False):
     board_copy = copy.deepcopy(board_state)
-    if depth == 0 or ai_score(board_state) == float("-infinity") or ai_score(board_state) == float("-infinity"):
-        if prev_move != 0:
-            board_copy = combine_single_move(board_copy, prev_move[0], prev_move[1], prev_move[2], prev_move[3])
+    if prev_move != 0:
+        board_copy = combine_single_move(board_copy, prev_move[0], prev_move[1], prev_move[2], prev_move[3])
+
+    if depth == 0 or ai_score(board_copy) == float("-infinity") or ai_score(board_copy) == float("infinity"):
+        #print("Leaf Node Board: Depth: " + str(depth) + str(board_copy))
         return ai_score(board_copy)
+    board_copy = copy.deepcopy(board_state)
     if MaxPlayer:
         best_val = float("-infinity")
         moves = possible_moves(board_copy, 0)
@@ -522,7 +525,9 @@ def minimax_alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, t
 
         for move in moves:
             move = move[0]
-            val = minimax_alphabeta(board_copy, depth - 1, False, alpha, beta, move)
+            #print("Max Depth " + str(depth) + " Board: " + str(board_copy))
+            val = minimax_alphabeta(copy.deepcopy(board_copy), depth - 1, False, alpha, beta, move)
+            #print("Score of " + str(val))
             if val > best_val:
                 best_move = move
             best_val = max(best_val, val)
@@ -545,6 +550,9 @@ def minimax_alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, t
             move_board = copy.deepcopy(board_copy)
             move_board = combine_moves(move_board, move[0], move[1], move[2], move[3], prev_move[0], prev_move[1], prev_move[2], prev_move[3])
             val = minimax_alphabeta(move_board, depth - 1, True, alpha, beta)
+            #print("Min Depth " + str(depth) + " Board: " + str(move_board))
+            #print("Score of " + str(val))
+
             best_val = min(best_val, val)
             beta = min(best_val, beta)
             if beta <= alpha:
@@ -575,6 +583,9 @@ def possible_moves(board_state, player_type):
                                 # valid AI move for the knight, return it
                                 if board_state[x+move[0]][y+move[1]] == "W":
                                     possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 0])
+                                elif board_state[x+move[0]][y+move[1]] == "p":
+                                    # give more points if it kills a pawn
+                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 2])
                                 else:
                                     possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 1])
                         else:
@@ -582,8 +593,10 @@ def possible_moves(board_state, player_type):
                                 # valid AI move for the knight, return it
                                 if board_state[x+move[0]][y+move[1]] == "W":
                                     possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 0])
+                                elif board_state[x+move[0]][y+move[1]] == "P":
+                                    # give more points if it kills a pawn, that matters much much more
+                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 2])
                                 else:
-                                    # kills a piece
                                     possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 1])
 
             elif (piece_type == "P" and player_type == 0) or (piece_type == "p" and player_type == 1):
@@ -977,8 +990,11 @@ def onclick_board_handler(x, y):
                             # we don't want to let them click again while the AI move is being generated
                             screen.onclick(None)
                             # generate the AI move
+                            message_queue("Generating AI Move")
                             print("GENERATING MINIMAX AI MOVE")
-                            generated_ai = minimax_alphabeta(copy.deepcopy(board), depth_amt, True, float("-infinity"), float("infinity"), 0, True)
+                            copy_of_board = copy.deepcopy(board)
+                            #print("This is a board: " + str(board))
+                            generated_ai = minimax_alphabeta(copy_of_board, depth_amt, True, float("-infinity"), float("infinity"), 0, True)
 
                             print(generated_ai)
                             if generated_ai[1] == float("-infinity"):
@@ -1436,8 +1452,8 @@ def choose_difficulty():
     difficulty_turtle.setpos(0, screen.window_height()/20)
     difficulty_turtle.write("Difficulty", True, align="center", font=("Ariel", int(screen.window_width()/12)))
     draw_button(0, -(screen.window_height()/20), "Easy", 'modify_difficulty(1); new_game()', screen.window_width()/3)
-    draw_button(0, -(screen.window_height()/7), "Medium", 'modify_difficulty(3); new_game()', screen.window_width()/3)
-    draw_button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(6); new_game()', screen.window_width()/3)
+    draw_button(0, -(screen.window_height()/7), "Medium", 'modify_difficulty(2); new_game()', screen.window_width()/3)
+    draw_button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(8); new_game()', screen.window_width()/3)
 
 def create_default_turtle(colour="white"):
     temp_turtle = turtle.Turtle()

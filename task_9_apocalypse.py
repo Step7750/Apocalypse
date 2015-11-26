@@ -64,19 +64,29 @@ screen.bgcolor("#4A4A4A")
 #screen.setup(width=1000, height=400)
 screen.title("Apocalypse")
 
+
+# Initialize Turtles for the right message queue and penalties
 PenaltyTurtle = turtle.Turtle()
 PenaltyTurtle.hideturtle()
 MessagesTurtle = turtle.Turtle()
 MessagesTurtle.hideturtle()
 
 # amount of moves the AI thinks forward (computation gets exponential). Anything over 7 will take a very long time....
-depth_amt = 7
+depth_amt = 6
 
 # for proper scaling with many dimensions, if the width is substantially more, go by the height of the screen
 BOARD_DIMENSION = screen.window_width()*0.75
 
+
 # dictionary that converts location num to a symbol
 SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
+
+# stores text height for the queue messages
+TEXT_HEIGHT = int(BOARD_DIMENSION/7.5)
+
+# stores text height for strings related to the penalty score board
+PENALTY_TEXT_HEIGHT = int(BOARD_DIMENSION/50)
+
 
 # store the state of the highlighting of boxes
 highlight_params = [0, 0, 0, False, 0]
@@ -85,14 +95,8 @@ box_selected = 0
 # stores coords of created buttons
 buttons = []
 
-# stores text height for the queue messages
-text_height = int(BOARD_DIMENSION/7.5)
-
-# stores text height for strings related to the penalty score board
-penalty_text_height = int(BOARD_DIMENSION/50)
-
 # creates the move offset that is needed to increment by everytime a new message is printed (creates extra var to save it)
-moveOffset = BOARD_DIMENSION/2 - (text_height/0.7) - (penalty_text_height * 1.5)
+moveOffset = BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.7) - (PENALTY_TEXT_HEIGHT * 1.5)
 saved_offset = moveOffset
 
 # define dynamic scaling variable that stores whether to scale by height or width
@@ -101,8 +105,8 @@ scaling_value = screen.window_width()
 
 def print_board():
     print("Board:")
-    for i in range(5):
-        print(board[i])
+    for row in range(5):
+        print(board[row])
 
 
 def draw_board():
@@ -114,18 +118,14 @@ def draw_board():
     global box_locations, board_turtles, buttons, moveOffset, saved_offset
     del buttons[:]
 
-    moveOffset = BOARD_DIMENSION/2 - (text_height/0.7) - (penalty_text_height * 1.5)
+    X_COR = 0
+    Y_COR = 1
+
+    moveOffset = BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.7) - (PENALTY_TEXT_HEIGHT * 1.5)
     saved_offset = moveOffset
 
     # Initiate turtle that will draw the board
-    main_board = turtle.Turtle()
-    main_board.up()
-    # set color to something a bit lighter than background
-    main_board.color("#5E5E5E")
-    main_board.hideturtle()
-    #main_board.speed(0)
-    # disable animations, this got really annoying
-    main_board._tracer(False)
+    main_board = create_default_turtle("#5E5E5E")
 
     # Make the board 80% width and 10% to the left
     main_board.goto(-(BOARD_DIMENSION/2) - (screen.window_width()*0.1), BOARD_DIMENSION/2)
@@ -145,8 +145,8 @@ def draw_board():
     for row in range(0, 5):
         for column in range(0, 5):
             # store the top left of every box in the chess table for future reference and click events
-            box_locations[row][column][0] = main_board.xcor()
-            box_locations[row][column][1] = main_board.ycor()
+            box_locations[row][column][X_COR] = main_board.xcor()
+            box_locations[row][column][Y_COR] = main_board.ycor()
 
             # create checkerboard pattern
 
@@ -172,13 +172,8 @@ def draw_board():
 
             # write out the characters (board pieces)
             # create new turtle just for the character, and store it in the array board_turtles
-            char_turtle = turtle.Turtle()
-            char_turtle.hideturtle()
-            char_turtle._tracer(False)
-
-            char_turtle.up()
+            char_turtle = create_default_turtle()
             char_turtle.setx(main_board.xcor() + (BOARD_DIMENSION/10))
-            char_turtle.color("white")
 
             # get symbol from dict
             text_to_write = SYMBOL_DICT[get_piece(row, column)]
@@ -487,8 +482,6 @@ def combine_moves(board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
         # reached last rank, process it
         board_state[new_x][new_y] = "k"
 
-    # check whether we need to upgrade pawns to knights
-
     return board_state
 
 
@@ -513,76 +506,7 @@ def combine_single_move(board_state_val, x, y, new_x, new_y):
     return board_state
 
 
-def maximize(depth, board_state, alpha, beta, force_reply=0):
-    """
-    Maximizes nodes in the depth level for the AI
-    Implements alpha beta pruning
-    """
-    board_copy = copy.deepcopy(board_state)
-    best_move = []
-    if depth == 0:
-        # reached end of depth level, send back the score
-        return -ai_score(board_copy)
-    moves = possible_moves(board_copy, 0)
-    for move in moves:
-        move_board = copy.deepcopy(board_copy)
-        cur_score = minimize(depth - 1, move_board, move, alpha, beta)
-        print("Depth " + str(depth) + " Move with score " + str(cur_score) + "  Move: " + str(move))
-        if force_reply == 1:
-            print("^ Top Level Move ----")
-        if cur_score > beta:
-            if force_reply == 1:
-                return [[move], beta]
-            else:
-                return beta
-        if cur_score > alpha and force_reply == 0:
-            # reset alpha if this isn't a forced reply (top of tree)
-            alpha = cur_score
-        if force_reply == 1 and cur_score > alpha:
-            if cur_score > alpha:
-                # score is higher, empty out the current moves
-                print("Score is higher, emptying list")
-                best_move.clear()
-            alpha = cur_score
-            best_move.append(copy.deepcopy(move))
-    if force_reply == 1:
-        return [best_move, alpha]
-    else:
-        return alpha
-
-
-def minimize(depth, board_state, prev_move, alpha, beta):
-    """
-    Minimizes nodes in the depth level for the player to minimize our score
-    Implements alpha beta pruning
-
-    pre_move defines the move that was made in the upper depth level, this is done to mimic the simultaneous nature of Apocalypse
-    We put simultaneous moves together in the minimizer (solves the simultaneous problem)
-
-    board_state is a list in the following structure (board (1D list), penalty points (1D List))
-    """
-    board_copy = copy.deepcopy(board_state)
-    if depth == 0:
-        # put together the move with the board and send back the score evaluation
-        board_copy = combine_single_move(board_copy, prev_move[0], prev_move[1], prev_move[2], prev_move[3])
-        return -ai_score(board_copy)
-
-    # generate all possible moves
-    moves = possible_moves(board_copy, 1)
-    for move in moves:
-        # go through the move apply it to a new copy of the board state
-        move_board = copy.deepcopy(board_copy)
-        move_board = combine_moves(move_board, move[0], move[1], move[2], move[3], prev_move[0], prev_move[1], prev_move[2], prev_move[3])
-        cur_score = maximize(depth - 1, move_board, alpha, beta)
-        print("Depth " + str(depth) + " Minimize Move with score " + str(cur_score) + "  Move: " + str(move))
-        if cur_score <= alpha:
-            return alpha
-        if cur_score < beta:
-            beta = cur_score
-    return beta
-
-
-def minimax(board_state, depth, MaxPlayer, prev_move=0, top_tree=False):
+def minimax_alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, top_tree=False):
     board_copy = copy.deepcopy(board_state)
     if depth == 0 or ai_score(board_state) == float("-infinity") or ai_score(board_state) == float("-infinity"):
         if prev_move != 0:
@@ -591,44 +515,14 @@ def minimax(board_state, depth, MaxPlayer, prev_move=0, top_tree=False):
     if MaxPlayer:
         best_val = float("-infinity")
         moves = possible_moves(board_copy, 0)
-        if top_tree:
-            best_move = []
-        for move in moves:
-            val = minimax(board_copy, depth - 1, False, move)
-            if val > best_val:
-                best_move = move
-            best_val = max(best_val, val)
-        if top_tree:
-            return [[best_move], best_val]
-        else:
-            return best_val
-    else:
-        # min player
-        best_val = float("infinity")
-        moves = possible_moves(board_copy, 1)
-        for move in moves:
-            move_board = copy.deepcopy(board_copy)
-            move_board = combine_moves(move_board, move[0], move[1], move[2], move[3], prev_move[0], prev_move[1], prev_move[2], prev_move[3])
-            val = minimax(move_board, depth - 1, True)
-            best_val = min(best_val, val)
-        return best_val
-
-
-def alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, top_tree=False):
-    board_copy = copy.deepcopy(board_state)
-    if depth == 0 or ai_score(board_state) == float("-infinity") or ai_score(board_state) == float("-infinity"):
-        if prev_move != 0:
-            board_copy = combine_single_move(board_copy, prev_move[0], prev_move[1], prev_move[2], prev_move[3])
-        return ai_score(board_copy)
-    if MaxPlayer:
-        best_val = float("-infinity")
-        moves = possible_moves(board_copy, 0)
-
+        # sort moves by ones who kill pieces first
+        moves = sorted(moves, key=lambda x: x[1], reverse=True)
         if top_tree:
             best_move = []
 
         for move in moves:
-            val = alphabeta(board_copy, depth - 1, False, alpha, beta, move)
+            move = move[0]
+            val = minimax_alphabeta(board_copy, depth - 1, False, alpha, beta, move)
             if val > best_val:
                 best_move = move
             best_val = max(best_val, val)
@@ -644,10 +538,13 @@ def alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, top_tree=
         # min player
         best_val = float("infinity")
         moves = possible_moves(board_copy, 1)
+        # sort moves by ones who kill pieces first
+        moves = sorted(moves, key=lambda x: x[1], reverse=True)
         for move in moves:
+            move = move[0]
             move_board = copy.deepcopy(board_copy)
             move_board = combine_moves(move_board, move[0], move[1], move[2], move[3], prev_move[0], prev_move[1], prev_move[2], prev_move[3])
-            val = alphabeta(move_board, depth - 1, True, alpha, beta)
+            val = minimax_alphabeta(move_board, depth - 1, True, alpha, beta)
             best_val = min(best_val, val)
             beta = min(best_val, beta)
             if beta <= alpha:
@@ -659,7 +556,10 @@ def possible_moves(board_state, player_type):
     """
     Generates possible AI moves given a board state
     """
+
+    # list to store the possible moves
     possible_moves = []
+
     knight_moves = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]
     for x in range(5):
         for y in range(5):
@@ -673,11 +573,18 @@ def possible_moves(board_state, player_type):
                         if player_type == 0:
                             if board_state[x+move[0]][y+move[1]] != "P" and board_state[x+move[0]][y+move[1]] != "K":
                                 # valid AI move for the knight, return it
-                                possible_moves.append([x, y, (x+move[0]), (y+move[1])])
+                                if board_state[x+move[0]][y+move[1]] == "W":
+                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 0])
+                                else:
+                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 1])
                         else:
                             if board_state[x+move[0]][y+move[1]] != "p" and board_state[x+move[0]][y+move[1]] != "k":
                                 # valid AI move for the knight, return it
-                                possible_moves.append([x, y, (x+move[0]), (y+move[1])])
+                                if board_state[x+move[0]][y+move[1]] == "W":
+                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 0])
+                                else:
+                                    # kills a piece
+                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 1])
 
             elif (piece_type == "P" and player_type == 0) or (piece_type == "p" and player_type == 1):
 
@@ -688,9 +595,8 @@ def possible_moves(board_state, player_type):
                     offset_val = x - 1
 
                 # boolean defining whether the pawn is redeploying or not
-                #print("Knight Amount for",player_type,knight_amount(board_state, player_type))
                 movement_upgrade = ((player_type == 0 and offset_val != 4) or (player_type == 1 and offset_val != 0)) or ((knight_amount(board_state, player_type) < 2) and ((player_type == 0 and offset_val == 4) or (player_type == 1 and offset_val == 0)))
-                #print("Movement Upgrade for " + str(player_type) + " is " + str(movement_upgrade))
+
                 valid_move_val = False
                 # check going diagonally right
                 if 0 <= offset_val < 5 and 0 <= (y + 1) < 5:
@@ -698,13 +604,13 @@ def possible_moves(board_state, player_type):
                     if player_type == 0:
                         if board_state[offset_val][(y + 1)] == "k" or board_state[offset_val][(y + 1)] == "p":
                             if movement_upgrade:
-                                possible_moves.append([x, y, offset_val, (y + 1)])
+                                possible_moves.append([[x, y, offset_val, (y + 1)], 1])
                             else:
                                 valid_move_val = True
                     else:
                         if board_state[offset_val][(y + 1)] == "K" or board_state[offset_val][(y + 1)] == "P":
                             if movement_upgrade:
-                                possible_moves.append([x, y, offset_val, (y + 1)])
+                                possible_moves.append([[x, y, offset_val, (y + 1)], 1])
                             else:
                                 valid_move_val = True
                 if 0 <= offset_val < 5 and 0 <= (y - 1) < 5:
@@ -712,13 +618,13 @@ def possible_moves(board_state, player_type):
                     if player_type == 0:
                         if board_state[offset_val][(y - 1)] == "k" or board_state[offset_val][(y - 1)] == "p":
                             if movement_upgrade:
-                                possible_moves.append([x, y, offset_val, (y - 1)])
+                                possible_moves.append([[x, y, offset_val, (y - 1)], 1])
                             else:
                                 valid_move_val = True
                     else:
                         if board_state[offset_val][(y - 1)] == "K" or board_state[offset_val][(y - 1)] == "P":
                             if movement_upgrade:
-                                possible_moves.append([x, y, offset_val, (y - 1)])
+                                possible_moves.append([[x, y, offset_val, (y - 1)], 1])
                             else:
                                 valid_move_val = True
                 if 0 <= offset_val < 5:
@@ -726,7 +632,7 @@ def possible_moves(board_state, player_type):
                     # check whether forward is whitespace or not
                     if board_state[offset_val][y] == "W":
                         if movement_upgrade:
-                            possible_moves.append([x, y, offset_val, y])
+                            possible_moves.append([[x, y, offset_val, y], 0])
                         else:
                             valid_move_val = True
                 if not movement_upgrade and valid_move_val == True:
@@ -737,7 +643,7 @@ def possible_moves(board_state, player_type):
                             temp_piece_type = board_state[tempx][tempy]
                             if temp_piece_type == "W":
                                 # this is a possibility
-                                possible_moves.append([x, y, tempx, tempy])
+                                possible_moves.append([[x, y, tempx, tempy], 0])
     return possible_moves
 
 
@@ -895,23 +801,23 @@ def penaltyCount():
 
     if platform.system() == "Windows":
         #button_turtle.setpos(x, y - (init_y/1.4))
-        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (penalty_text_height/0.8))
+        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (PENALTY_TEXT_HEIGHT/0.8))
     else:
         #button_turtle.setpos(x, y - (init_y/1.65))
-        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (penalty_text_height/1))
+        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (PENALTY_TEXT_HEIGHT/1))
 
 
-    PenaltyTurtle.write("Penalty Points:", False, align="left", font=("Ariel", penalty_text_height))
+    PenaltyTurtle.write("Penalty Points:", False, align="left", font=("Ariel", PENALTY_TEXT_HEIGHT))
 
     if platform.system() == "Windows":
         #button_turtle.setpos(x, y - (init_y/1.4))
-        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (text_height/0.8))
+        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.8))
     else:
         #button_turtle.setpos(x, y - (init_y/1.65))
-        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (text_height/1))
+        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (TEXT_HEIGHT/1))
 
 
-    PenaltyTurtle.sety(PenaltyTurtle.ycor() - (penalty_text_height * 1.5))
+    PenaltyTurtle.sety(PenaltyTurtle.ycor() - (PENALTY_TEXT_HEIGHT * 1.5))
 
     PenaltyTurtle.color("grey")
     PenaltyTurtle._tracer(False)
@@ -921,22 +827,22 @@ def penaltyCount():
     saved_y = PenaltyTurtle.ycor()
     PenaltyTurtle.setx(BOARD_DIMENSION/2 - screen.window_width() * 0.08)
     text_width = PenaltyTurtle.xcor()
-    PenaltyTurtle.write(penalty_points[0], move=True, align="left", font=("Ariel", text_height))
+    PenaltyTurtle.write(penalty_points[0], move=True, align="left", font=("Ariel", TEXT_HEIGHT))
     text_width = PenaltyTurtle.xcor() - text_width
     saved_x = PenaltyTurtle.xcor()
     PenaltyTurtle.setx(saved_x - text_width/2)
-    PenaltyTurtle.write("Player", False, align="center", font=("Ariel", penalty_text_height))
+    PenaltyTurtle.write("Player", False, align="center", font=("Ariel", PENALTY_TEXT_HEIGHT))
     PenaltyTurtle.setpos(saved_x, saved_y)
 
 
     # write out the ai penalty amount and string
     PenaltyTurtle.setx(PenaltyTurtle.xcor() + screen.window_width() * 0.03)
     text_width = PenaltyTurtle.xcor()
-    PenaltyTurtle.write(penalty_points[1], move=True, align="left", font=("Ariel", text_height))
+    PenaltyTurtle.write(penalty_points[1], move=True, align="left", font=("Ariel", TEXT_HEIGHT))
     text_width = PenaltyTurtle.xcor() - text_width
     saved_x = PenaltyTurtle.xcor()
     PenaltyTurtle.setx(saved_x - text_width/2)
-    PenaltyTurtle.write("AI", move=False, align="center", font=("Ariel", penalty_text_height))
+    PenaltyTurtle.write("AI", move=False, align="center", font=("Ariel", PENALTY_TEXT_HEIGHT))
 
 
 def load_state():
@@ -974,7 +880,7 @@ def load_state():
         screen.listen()
 
         # reset messages offset location
-        moveOffset = BOARD_DIMENSION/2 - (text_height/0.7) - (penalty_text_height * 1.5)
+        moveOffset = BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.7) - (PENALTY_TEXT_HEIGHT * 1.5)
         message_queue("Loaded Board")
         file_obj.close()
     except:
@@ -1072,7 +978,7 @@ def onclick_board_handler(x, y):
                             screen.onclick(None)
                             # generate the AI move
                             print("GENERATING MINIMAX AI MOVE")
-                            generated_ai = alphabeta(copy.deepcopy(board), depth_amt, True, float("-infinity"), float("infinity"), 0, True)
+                            generated_ai = minimax_alphabeta(copy.deepcopy(board), depth_amt, True, float("-infinity"), float("infinity"), 0, True)
 
                             print(generated_ai)
                             if generated_ai[1] == float("-infinity"):
@@ -1264,10 +1170,7 @@ def game_end_screen(winner):
         text_write = "Stalemate!"
 
     # configure a turtle and write out who won
-    end_screen_turtle = turtle.Turtle()
-    end_screen_turtle.hideturtle()
-    end_screen_turtle.color("white")
-    end_screen_turtle._tracer(False)
+    end_screen_turtle = create_default_turtle()
 
     # the font size is just a relative static value to make sure it is proportionate to the screen dimensions
     end_screen_turtle.write(text_write, move=False, align="center", font=("Arial", int(BOARD_DIMENSION/8)))
@@ -1291,9 +1194,8 @@ def draw_button(x, y, text, code_exec, width=0, font_size=scaling_value/25):
     """
 
     # Find the width of the text (finding the height is not possible)
-    width_turtle = turtle.Turtle()
-    width_turtle.hideturtle()
-    width_turtle._tracer(False)
+    width_turtle = create_default_turtle()
+
     init_x = width_turtle.xcor()
 
     # set default text font size
@@ -1314,12 +1216,8 @@ def draw_button(x, y, text, code_exec, width=0, font_size=scaling_value/25):
     print("Drawing button with text " + text)
 
     # draw out the background white box around the text
-    button_turtle = turtle.Turtle()
-    button_turtle.hideturtle()
-    button_turtle.up()
+    button_turtle = create_default_turtle()
 
-    button_turtle.color("white")
-    button_turtle._tracer(False)
     button_turtle.setpos(x - (width_val/2), y + (height_val/2))
     button_turtle.down()
 
@@ -1357,10 +1255,15 @@ def button_event(x, y):
     :param y: **numeric** The y coordinate of a user's click
     :return:
     """
+    WIDTH = 2
+    TOP_LEFT = 0
+    BOTTOM_LEFT = 1
+    HEIGHT = 3
+    FUNCTION = 5
 
-    for i in buttons:
-        if (i[0] + i[2]) > x > i[0] and i[1] > y > (i[1] - i[3]):
-            exec(i[5])
+    for button in buttons:
+        if (button[TOP_LEFT] + button[WIDTH]) > x > button[TOP_LEFT] and button[BOTTOM_LEFT] > y > (button[BOTTOM_LEFT] - button[HEIGHT]):
+            exec(button[FUNCTION])
 
 
 def draw_main_bg():
@@ -1371,13 +1274,7 @@ def draw_main_bg():
     """
 
     # create the turtle that draws the checkerboard bg pattern and configure its settings
-    bg_turtle = turtle.Turtle()
-    bg_turtle.color("#5E5E5E")
-    bg_turtle.up()
-    bg_turtle.hideturtle()
-
-    # remove animations
-    bg_turtle._tracer(False)
+    bg_turtle = create_default_turtle("#5E5E5E")
 
     # define the size of each box
     box_height = screen.window_height() / 5
@@ -1434,11 +1331,7 @@ def draw_main_screen():
     draw_main_bg()
 
     # initialize a turtle to draw the main screen text
-    main_menu_turtle = turtle.Turtle()
-    main_menu_turtle.hideturtle()
-    main_menu_turtle.up()
-    main_menu_turtle.color("white")
-    main_menu_turtle._tracer(False)
+    main_menu_turtle = create_default_turtle()
 
     main_menu_turtle.sety(screen.window_height()/5)
     main_menu_turtle.write("Apocalypse", True, align="center", font=("Ariel", int(scaling_value/8)))
@@ -1532,21 +1425,27 @@ def choose_difficulty():
     """
     global buttons
     del buttons[:]
+
     screen.clear()
     screen.onclick(button_event)
     screen.bgcolor("#4A4A4A")
 
-    main_turtle = turtle.Turtle()
-    main_turtle.hideturtle()
-    main_turtle.color("white")
-    main_turtle._tracer(False)
-    main_turtle.up()
-    main_turtle.setpos(0, screen.window_height()/20)
-    main_turtle.write("Difficulty", True, align="center", font=("Ariel", int(screen.window_width()/12)))
+    # setup the turtle
+    difficulty_turtle = create_default_turtle()
+
+    difficulty_turtle.setpos(0, screen.window_height()/20)
+    difficulty_turtle.write("Difficulty", True, align="center", font=("Ariel", int(screen.window_width()/12)))
     draw_button(0, -(screen.window_height()/20), "Easy", 'modify_difficulty(1); new_game()', screen.window_width()/3)
     draw_button(0, -(screen.window_height()/7), "Medium", 'modify_difficulty(3); new_game()', screen.window_width()/3)
-    draw_button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(5); new_game()', screen.window_width()/3)
+    draw_button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(6); new_game()', screen.window_width()/3)
 
+def create_default_turtle(colour="white"):
+    temp_turtle = turtle.Turtle()
+    temp_turtle.hideturtle()
+    temp_turtle.color(colour)
+    temp_turtle._tracer(False)
+    temp_turtle.up()
+    return temp_turtle
 
 def modify_difficulty(level):
     """

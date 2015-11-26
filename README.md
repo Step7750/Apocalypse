@@ -23,6 +23,8 @@ Task 8:
 
 Task 9:
 * Utilize classes to simplify code structure
+* Add more heuristics to improve the AI speed and increase depth
+* Improve weighting system structure to be dynamic
 * ~~Main Menu screen that allows you to play, how to play, etc...~~
 * ~~Function that creates clickable buttons~~
 * ~~Fix positioning of penalty points and the queue~~

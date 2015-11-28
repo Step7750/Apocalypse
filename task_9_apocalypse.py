@@ -20,7 +20,7 @@ Features:
 """
 
 import turtle
-import platform   # used to know what the scaling should be
+import platform   # used to know what the general display scaling should be
 import copy       # for deep copies (for the minimax ai)
 
 
@@ -92,7 +92,7 @@ PENALTY_TEXT_HEIGHT = int(BOARD_DIMENSION/50)
 highlight_params = [0, 0, 0, False, 0]
 box_selected = 0
 
-# stores coords of created buttons
+# stores objects of created buttons
 buttons = []
 
 # creates the move offset that is needed to increment by everytime a new message is printed (creates extra var to save it)
@@ -374,12 +374,12 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
 
 def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
     """
-    Executes a given move on the board (modifying values, drawing the board)
+    Executes a given move on the board (modifying values and drawing the board)
 
     :param x: **int** current piece x coord
     :param y: **int** current piece y coord
-    :param newx: **int** new piece x coord
-    :param newy: **int** new piece y coord
+    :param new_x: **int** new piece x coord
+    :param new_y: **int** new piece y coord
     :param symbol: **string** Symbol of the piece you're moving
     :param piece_code: **int** Piece value (on the board) to use (optional)
     :param force_delete: **int** Force delete the previous piece on the board (optional)
@@ -431,10 +431,11 @@ def valid_move(x, y, newx, newy, playername):
     :param newx: **int** new piece x coord
     :param newy: **int** new piece y coord
     :param playername: **string** playername is p or a depending on player or ai
-    :return:
+    :return: **bool** True if it is a valid move, False if not
     """
     # x, y is current piece that wants to move to newx, newy
     # playername is p or a depending on player or ai
+    Bool_Return = False
     knight_moves = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]
     if (0 <= x <= 4 and 0 <= y <= 4 and 0 <= newx <= 4 and 0 <= newy <= 4):
         piece_type = get_piece(x, y)
@@ -448,15 +449,13 @@ def valid_move(x, y, newx, newy, playername):
                         if (playername == "p"):
                             if (new_piece_type != "p" and new_piece_type != "k"):
                                 # valid knight move, continue on
-                                return True
+                                Bool_Return = True
+                                break
                         elif (playername == "a"):
                             if (new_piece_type != "P" and new_piece_type != "K"):
                                 # valid knight move, continue on
-                                return True
-                return False
-            else:
-                # they don't own that piece
-                return False
+                                Bool_Return = True
+                                break
 
         elif piece_type.lower() == "p":
 
@@ -478,33 +477,17 @@ def valid_move(x, y, newx, newy, playername):
                     print("Board State: " + str(board))
                     if playername == "p":
                         if new_piece_type == "K" or new_piece_type == "P":
-                            return True
-                        else:
-                            return False
+                            Bool_Return = True
                     elif playername == "a":
                         if new_piece_type == "k" or new_piece_type == "p":
-                            return True
-                        else:
-                            return False
+                            Bool_Return = True
                 elif (newx == offset_val and newy == y):
                     # check whether it is going forward
                     # check whether forward is whitespace or not
                     print("Checking whitespace")
                     if (new_piece_type == "W"):
-                        return True
-                    else:
-                        return False
-                else:
-                    return False
-            else:
-                # they don't own that piece
-                return False
-        else:
-            print("Selected white space, invalid")
-            return False
-    else:
-        print("One of the pieces isn't in the range of the board")
-        return False
+                        Bool_Return = True
+    return Bool_Return
 
 
 def ai_score(board_state):
@@ -514,16 +497,18 @@ def ai_score(board_state):
     :param board_state: **multi-dimensional list** defining the board state
     :return: **numerical** returns score of the current board for the AI
     """
-    current_score = 0
-    current_pawns = 0
+    # Calculate the current AI score and pawn amount
+    ai_score_val = 0
+    ai_pawns = 0
     for row in range(5):
         for column in range(5):
             if board_state[row][column] == "K":
-                current_score += KNIGHT_WEIGHTING
+                ai_score_val += KNIGHT_WEIGHTING
             elif board_state[row][column] == "P":
-                current_score += PAWN_WEIGHTING
-                current_pawns += 1
+                ai_score_val += PAWN_WEIGHTING
+                ai_pawns += 1
 
+    # Calculate the current player score and pawn amount
     player_score = 0
     player_pawns = 0
     for row in range(5):
@@ -533,19 +518,26 @@ def ai_score(board_state):
             elif board_state[row][column] == "p":
                 player_score += PAWN_WEIGHTING
                 player_pawns += 1
+
+    # Set value to store the return value
+    return_val = 0
+
+    # Calculate general score of the board for the AI
     if len(possible_moves(board_state, 0)) == 0:
-        return float("-infinity")
-    if current_pawns == 0 and player_pawns == 0:
+        return_val = float("-infinity")
+    elif ai_pawns == 0 and player_pawns == 0:
         # stalemate, return value of 0
-        return 0
-    if current_pawns == 0:
+        return_val = 0
+    elif ai_pawns == 0:
         # the player won
-        return float("-infinity")
+        return_val = float("-infinity")
     elif player_pawns == 0:
         # the ai won
-        return float("infinity")
+        return_val = float("infinity")
     else:
-        return current_score-player_score
+        return_val = ai_score_val-player_score
+
+    return return_val
 
 
 def combine_moves(board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
@@ -565,10 +557,12 @@ def combine_moves(board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     :return: **multi-dimensional list** Board state with the moves combined
 
     """
+    # Create deep copy of the board to configure
     board_state = copy.deepcopy(board_state_val)
 
-    player_val = copy.copy(board_state[x][y])
-    ai_val = copy.copy(board_state[x2][y2])
+    # store the values of each moving board piece
+    player_val = board_state[x][y]
+    ai_val = board_state[x2][y2]
 
     if new_x == new_x2 and new_y == new_y2:
 
@@ -601,10 +595,12 @@ def combine_moves(board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
         board_state[new_x2][new_y2] = ai_val
         board_state[x2][y2] = "W"
 
+    # check whether an AI pawn reached the last rank
     if ai_val == "P" and new_x2 == 4:
         # reached last rank, process it
         board_state[new_x2][new_y2] = "K"
 
+    # check whether a player pawn reached the last rank
     if player_val == "p" and new_x == 0:
         # reached last rank, process it
         board_state[new_x][new_y] = "k"
@@ -877,36 +873,52 @@ def game_over():
     """
     print("Checking whether it is game over or not")
 
+    # Set constants for readability
+    AI = 0
+    PLAYER = 1
+
+    AI_WON = 1
+    PLAYER_WON = 0
+    STALEMATE = 2
+    NOT_OVER = 3
+
     # check whether one of the players has made two illegal moves
-    if penalty_points[0] == 2 and penalty_points[1] == 2:
-        return 2
-    elif penalty_points[0] == 2 and not penalty_points[1] == 2:
-        return 0
-    elif penalty_points[1] == 2 and not penalty_points[0] == 2:
-        return 1
+    return_val = -1
+    if penalty_points[AI] == 2 and penalty_points[PLAYER] == 2:
+        return_val = STALEMATE
+    elif penalty_points[AI] == 2:
+        return_val = PLAYER_WON
+    elif penalty_points[PLAYER] == 2:
+        return_val = AI_WON
 
-    # now check whether one of the players has no pawns left
-    # loop over each pawn
+    if return_val == -1:
+        # now check whether one of the players has no pawns left
+        # loop over each pawn
 
-    ai_pieces = 0
-    player_pieces = 0
+        ai_pieces = 0
+        player_pieces = 0
 
-    # Check how many pawns each has, if they are all gone, they lose
-    for row in board:
-        for column in row:
-            if column == "P":
-                ai_pieces += 1
-            elif column == "p":
-                player_pieces += 1
-    if ai_pieces == 0 and player_pieces == 0:
-        # no pawns on both sides
-        return 2
-    elif ai_pieces == 0:
-        return 1
-    elif player_pieces == 0:
-        return 0
+        # Check how many pawns each has, if they are all gone, they lose
+        for row in board:
+            for column in row:
+                if column == "P":
+                    ai_pieces += 1
+                elif column == "p":
+                    player_pieces += 1
+        if ai_pieces == 0 and player_pieces == 0:
+            # no pawns on both sides
+            return_val = STALEMATE
+        elif ai_pieces == 0:
+            return_val = PLAYER_WON
+        elif player_pieces == 0:
+            return_val = AI_WON
+        else:
+            return_val = NOT_OVER
+
+        return return_val
     else:
-        return 3
+        # we've already come to the game over condition, return it
+        return return_val
 
 
 def penalty_add(player):
@@ -956,7 +968,7 @@ def message_queue(to_write):
     global moveOffset
     MessagesTurtle.up()
 
-    # reset the messages if it goes beyond the height of board dimension
+    # reset the messages if it goes beyond the space height
     if moveOffset < -(BOARD_DIMENSION/4.5):
         moveOffset = SAVED_OFFSET
         MessagesTurtle.clear()
@@ -1063,7 +1075,7 @@ def load_state():
         screen.listen()
 
         # reset messages offset location
-        moveOffset = BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.7) - (PENALTY_TEXT_HEIGHT * 1.5)
+        moveOffset = (BOARD_DIMENSION/2) - (TEXT_HEIGHT/0.7) - (PENALTY_TEXT_HEIGHT * 1.5)
         message_queue("Loaded Board")
         file_obj.close()
     except:
@@ -1093,7 +1105,7 @@ def save_state():
             message_queue("Error Saving")
 
 
-def knight_amount(board_state, player):
+def knight_amount(board, player):
     """
     Returns the amount knights a player has
 
@@ -1101,7 +1113,6 @@ def knight_amount(board_state, player):
     :param player: **numeric** integer defining player
     :return: **numeric** how many knights the player owns on that game state
     """
-    board = board_state
     knight_amt = 0
     for row in board:
         for column in row:
@@ -1121,11 +1132,19 @@ def onclick_board_handler(x, y):
     :return:
     """
     global board
-    # check whether they clicked inside the board
-    if box_locations[0][0][0] < x < (box_locations[4][4][0] + BOARD_DIMENSION/5) and \
-                            (box_locations[4][4][1] - BOARD_DIMENSION/5) < y < box_locations[0][0][1]:
-        # they clicked inside, let's go!
 
+    TOP_LEFT_X = box_locations[0][0][0]
+    BOTTOM_LEFT_X = box_locations[4][4][0]
+    BOX_WIDTH = BOARD_DIMENSION/5
+
+    TOP_LEFT_Y = box_locations[0][0][1]
+    BOTTOM_RIGHT_Y = box_locations[4][4][1]
+
+    # check whether they clicked inside the board
+    if TOP_LEFT_X < x < (BOTTOM_LEFT_X + BOX_WIDTH) and (BOTTOM_RIGHT_Y - BOX_WIDTH) < y < TOP_LEFT_Y:
+        # Clicked inside of the board
+
+        # Want to edit the global copies of these vars
         global highlight_params, box_selected, board
 
         if highlight_params[0] != 0:

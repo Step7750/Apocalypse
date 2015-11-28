@@ -71,7 +71,7 @@ PenaltyTurtle.hideturtle()
 MessagesTurtle = turtle.Turtle()
 MessagesTurtle.hideturtle()
 
-# amount of moves the AI thinks forward (computation gets exponential). Anything over 7 will take a very long time....
+# default amount of moves the AI thinks forward (computation gets exponential). Anything over 7 will take a very long time....
 depth_amt = 6
 
 # for proper scaling with many dimensions, if the width is substantially more, go by the height of the screen
@@ -97,10 +97,116 @@ buttons = []
 
 # creates the move offset that is needed to increment by everytime a new message is printed (creates extra var to save it)
 moveOffset = BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.7) - (PENALTY_TEXT_HEIGHT * 1.5)
-saved_offset = moveOffset
+SAVED_OFFSET = moveOffset
 
 # define dynamic scaling variable that stores whether to scale by height or width
 scaling_value = screen.window_width()
+
+
+class Button:
+    def __init__(self, x, y, text, code_exec, width=0, font_size=scaling_value/25):
+        """
+        Draws a button centered at the specified x, y point with the text passed in as a parameter and also handles
+        configuring the click events for it
+
+        :param x: **numeric** x coord of the center of the button
+        :param y: **numeric** y coord of the center of the button
+        :param text: **string** desired button text
+        :param code_exec: **string** function or code to execute when the button is clicked
+        :param width: optional **numeric** overwrites the default padding width with a specified width of the button
+        :return:
+        """
+        self.font_size = int(font_size)
+        self.function = code_exec
+        self.x = x
+        self.y = y
+        self.width = width
+        self.text = text
+
+        text_width = self.text_width()
+        if width == 0:
+            self.width = text_width + text_width * 0.15
+
+        self.height = font_size + (font_size * 0.6)
+
+        print("Drawing button with text " + text)
+        self.draw_button()
+
+        self.top_left = (x - self.width/2)
+        self.bottom = (y + self.height/2)
+
+        # append the object of the button to the list "buttons" for the event handler
+        buttons.append(self)
+
+    def text_width(self):
+        """
+        Determines the text width of the specified text of the button
+
+        :return:
+        """
+        width_turtle = create_default_turtle()
+
+        init_x = width_turtle.xcor()
+
+        width_turtle.write(self.text, move=True, align="left", font=("Ariel", self.font_size))
+        width_turtle.clear()
+
+        self.text_width = width_turtle.xcor() - init_x
+
+        return self.text_width
+
+    def draw_button(self):
+        """
+        Draws the button given the already set state
+
+        :return:
+        """
+        # draw out the background white box around the text
+        self.button_turtle = create_default_turtle()
+
+        self.button_turtle.setpos(self.x - (self.width/2), self.y + (self.height/2))
+        self.button_turtle.down()
+
+        self.button_turtle.begin_fill()
+        for i in range(4):
+            if i % 2 == 0:
+                # even num
+                self.button_turtle.forward(self.width)
+            else:
+                self.button_turtle.forward(self.height)
+            self.button_turtle.right(90)
+
+        self.button_turtle.end_fill()
+        self.button_turtle.up()
+        self.button_turtle.color("black")
+
+        # Windows and Unix based systems have different font heights and scaling
+        if platform.system() == "Windows":
+            self.button_turtle.setpos(self.x, self.y - (self.font_size/1.4))
+        else:
+            self.button_turtle.setpos(self.x, self.y - (self.font_size/1.65))
+
+        # write out the text in the center of the button
+        self.button_turtle.write(self.text, align="center", font=("Ariel", self.font_size))
+
+    def check_clicked(self, x, y):
+        """
+        Given the x and y of a user's click, return a Bool as to whether the user clicked this button
+
+        :param x: **numeric** The x coordinate of a user's click
+        :param y: **numeric** The y coordinate of a user's click
+        :return: **bool** True if the user clicked the button, False if not
+        """
+        if (self.top_left + self.width) > x > self.top_left and self.bottom > y > (self.bottom - self.height):
+            return True
+        else:
+            return False
+
+    def execute_function(self):
+        """
+        Execute the function this button holds when clicked
+        """
+        exec(self.function)
 
 
 def print_board():
@@ -115,14 +221,14 @@ def draw_board():
     """
 
     # want to edit the global variables
-    global box_locations, board_turtles, buttons, moveOffset, saved_offset
+    global box_locations, board_turtles, buttons, moveOffset, SAVED_OFFSET
     del buttons[:]
 
     X_COR = 0
     Y_COR = 1
 
     moveOffset = BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.7) - (PENALTY_TEXT_HEIGHT * 1.5)
-    saved_offset = moveOffset
+    SAVED_OFFSET = moveOffset
 
     # Initiate turtle that will draw the board
     main_board = create_default_turtle("#5E5E5E")
@@ -200,9 +306,9 @@ def draw_board():
         main_board.setpos(-(BOARD_DIMENSION/2) - (screen.window_width()*0.1), (main_board.ycor() - (BOARD_DIMENSION/5)))
 
     # create buttons on the main board to perform various actions, the offsets were calculated by eye and are relative
-    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.13, "Load Game", 'load_state()', screen.window_width()*0.20, scaling_value/36)
-    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.50, "Save Game", 'save_state()', screen.window_width()*0.20, scaling_value/36)
-    draw_button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/3.02, "Main Menu", 'draw_main_screen()', screen.window_width()*0.20, scaling_value/36)
+    Button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.13, "Load Game", 'load_state()', screen.window_width()*0.20, scaling_value/36)
+    Button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/2.50, "Save Game", 'save_state()', screen.window_width()*0.20, scaling_value/36)
+    Button(BOARD_DIMENSION/2 + (BOARD_DIMENSION/2 * 0.03), -BOARD_DIMENSION/3.02, "Main Menu", 'draw_main_screen()', screen.window_width()*0.20, scaling_value/36)
 
 
 def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
@@ -800,7 +906,7 @@ def message_queue(to_write):
 
     # reset the messages if it goes beyond the height of board dimension
     if moveOffset < -(BOARD_DIMENSION/4.5):
-        moveOffset = saved_offset
+        moveOffset = SAVED_OFFSET
         MessagesTurtle.clear()
 
     moveOffset -= int(BOARD_DIMENSION/40) * 1.25
@@ -1168,9 +1274,9 @@ def onclick_board_handler(x, y):
 
             column = 0
     else:
-        for i in buttons:
-            if (i[0] + i[2]) > x > i[0] and i[1] > y > (i[1] - i[3]):
-                exec(i[5])
+        for button in buttons:
+            if button.check_clicked(x, y):
+                button.execute_function()
 
 
 def game_end_screen(winner):
@@ -1204,75 +1310,8 @@ def game_end_screen(winner):
     end_screen_turtle.write(text_write, move=False, align="center", font=("Arial", int(BOARD_DIMENSION/8)))
 
     # draw out the main menu button
-    draw_button(0, -(screen.window_height()/20), "Main Menu", 'draw_main_screen()', scaling_value/3)
+    Button(0, -(screen.window_height()/20), "Main Menu", 'draw_main_screen()', scaling_value/3)
     print(buttons)
-
-
-def draw_button(x, y, text, code_exec, width=0, font_size=scaling_value/25):
-    """
-    Draws a button centered at the specified x, y point with the text passed in as a parameter and also handles
-    configuring the click events for it
-
-    :param x: **numeric** x coord of the center of the button
-    :param y: **numeric** y coord of the center of the button
-    :param text: **string** desired button text
-    :param code_exec: **string** function or code to execute when the button is clicked
-    :param width: optional **numeric** overwrites the default padding width with a specified width of the button
-    :return:
-    """
-
-    # Find the width of the text (finding the height is not possible)
-    width_turtle = create_default_turtle()
-
-    init_x = width_turtle.xcor()
-
-    # set default text font size
-    init_y = int(font_size)
-
-    width_turtle.write(text, move=True, align="left", font=("Ariel", init_y))
-    width_turtle.clear()
-    text_width = width_turtle.xcor() - init_x
-
-    # Create the proper box size dimensions depending on whether the user has overwritten them
-    if width == 0:
-        width_val = text_width + text_width * 0.15
-    else:
-        width_val = width
-    height_val = init_y + init_y * 0.6
-
-
-    print("Drawing button with text " + text)
-
-    # draw out the background white box around the text
-    button_turtle = create_default_turtle()
-
-    button_turtle.setpos(x - (width_val/2), y + (height_val/2))
-    button_turtle.down()
-
-    button_turtle.begin_fill()
-    for i in range(4):
-        if i % 2 == 0:
-            # even num
-            button_turtle.forward(width_val)
-        else:
-            button_turtle.forward(height_val)
-        button_turtle.right(90)
-
-    button_turtle.end_fill()
-    button_turtle.up()
-    button_turtle.color("black")
-
-    # Windows and Unix based systems have different font heights and scaling
-    if platform.system() == "Windows":
-        button_turtle.setpos(x, y - (init_y/1.4))
-    else:
-        button_turtle.setpos(x, y - (init_y/1.65))
-
-    # write out the text in the center of the button
-    button_turtle.write(text, align="center", font=("Ariel", init_y))
-
-    # append the attributes of the button to the list "buttons" for the event handler
-    buttons.append([(x - width_val/2), (y + height_val/2), width_val, height_val, text, code_exec])
 
 
 def button_event(x, y):
@@ -1283,6 +1322,10 @@ def button_event(x, y):
     :param y: **numeric** The y coordinate of a user's click
     :return:
     """
+    for button in buttons:
+        if button.check_clicked(x, y):
+            button.execute_function()
+    """
     WIDTH = 2
     TOP_LEFT = 0
     BOTTOM_LEFT = 1
@@ -1292,6 +1335,7 @@ def button_event(x, y):
     for button in buttons:
         if (button[TOP_LEFT] + button[WIDTH]) > x > button[TOP_LEFT] and button[BOTTOM_LEFT] > y > (button[BOTTOM_LEFT] - button[HEIGHT]):
             exec(button[FUNCTION])
+    """
 
 
 def draw_main_bg():
@@ -1368,8 +1412,8 @@ def draw_main_screen():
     main_menu_turtle.setposition((screen.window_width() / 2), -((screen.window_height() / 2) - 10))
 
 
-    draw_button(0, -(screen.window_height()/20), "New Game", 'choose_difficulty()', screen.window_width()/3)
-    draw_button(0, -(screen.window_height()/7), "Load Game", 'load_state()', screen.window_width()/3)
+    Button(0, -(screen.window_height()/20), "New Game", 'choose_difficulty()', screen.window_width()/3)
+    Button(0, -(screen.window_height()/7), "Load Game", 'load_state()', screen.window_width()/3)
 
 
 def main_menu():
@@ -1463,9 +1507,9 @@ def choose_difficulty():
 
     difficulty_turtle.setpos(0, screen.window_height()/20)
     difficulty_turtle.write("Difficulty", True, align="center", font=("Ariel", int(screen.window_width()/12)))
-    draw_button(0, -(screen.window_height()/20), "Easy", 'modify_difficulty(1); new_game()', screen.window_width()/3)
-    draw_button(0, -(screen.window_height()/7), "Medium", 'modify_difficulty(2); new_game()', screen.window_width()/3)
-    draw_button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(8); new_game()', screen.window_width()/3)
+    Button(0, -(screen.window_height()/20), "Easy", 'modify_difficulty(1); new_game()', screen.window_width()/3)
+    Button(0, -(screen.window_height()/7), "Medium", 'modify_difficulty(4); new_game()', screen.window_width()/3)
+    Button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(8); new_game()', screen.window_width()/3)
 
 def create_default_turtle(colour="white"):
     temp_turtle = turtle.Turtle()

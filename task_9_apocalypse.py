@@ -808,7 +808,7 @@ def message_queue(to_write):
     MessagesTurtle.color("grey")
 
     MessagesTurtle.goto(BOARD_DIMENSION/2 - screen.window_width() * 0.08, moveOffset)
-    MessagesTurtle.write(to_write, move=True, align="left", font=("Ariel", int(BOARD_DIMENSION/40)))
+    MessagesTurtle.write(to_write, move=True, align="left", font=("Ariel", int(BOARD_DIMENSION/45)))
     moveOffset = MessagesTurtle.ycor()
 
 
@@ -1204,7 +1204,7 @@ def game_end_screen(winner):
     end_screen_turtle.write(text_write, move=False, align="center", font=("Arial", int(BOARD_DIMENSION/8)))
 
     # draw out the main menu button
-    draw_button(0, -(screen.window_height()/20), "Main Menu", 'draw_main_screen()', scaling_value/3.5)
+    draw_button(0, -(screen.window_height()/20), "Main Menu", 'draw_main_screen()', scaling_value/3)
     print(buttons)
 
 
@@ -1368,8 +1368,8 @@ def draw_main_screen():
     main_menu_turtle.setposition((screen.window_width() / 2), -((screen.window_height() / 2) - 10))
 
 
-    draw_button(0, -(screen.window_height()/20), "New Game", 'choose_difficulty()', screen.window_width()/3.5)
-    draw_button(0, -(screen.window_height()/7), "Load Game", 'load_state()', screen.window_width()/3.5)
+    draw_button(0, -(screen.window_height()/20), "New Game", 'choose_difficulty()', screen.window_width()/3)
+    draw_button(0, -(screen.window_height()/7), "Load Game", 'load_state()', screen.window_width()/3)
 
 
 def main_menu():

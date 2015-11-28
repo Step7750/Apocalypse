@@ -26,8 +26,8 @@ import copy       # for deep copies (for the minimax ai)
 
 
 # set the score weighting for pawns and knights
-knight_points = 1
-pawn_points = 1
+KNIGHT_WEIGHTING = 1
+PAWN_WEIGHTING = 1
 
 # if one pawn left, value it much higher
 # algorithm that values the pieces dynamically
@@ -313,9 +313,20 @@ def draw_board():
 
 def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     """
-    This function handles the movement process for both pieces to make sure they are simultaneous
-    x2, y2, new_x2, new_y2 is for the AI
-    x, y, new_x, new_y is for the player
+    Combines two move onto a given board state WITH drawing functionality
+    Uses the rules of simultaneous movement in Apocalypse when combining the moves
+
+    :param board_state_val: **multi-dimensional list** Board state
+    :param x: **int** current x coord of the first piece to move
+    :param y: **int** current y coord of the first piece to move
+    :param new_x: **int** new x coord of the first piece to move
+    :param new_y: **int** new y coord of the first piece to move
+    :param x2: **int** current x coord of the second piece to move
+    :param y2: **int** current y coord of the second piece to move
+    :param new_x2: **int** new y coord of the second piece to move
+    :param new_y2: **int** new y coord of the second piece to move
+    :return: **multi-dimensional list** Board state with the moves combined
+
     """
     global board
     # check whether the destination is the same for both
@@ -327,19 +338,19 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
         if piece_type1 == "p" and piece_type2 == "P":
             # both pawns, delete both
             print("Both are pawns, detroying both")
-            delete_piece(x, y, board_turtles)
-            delete_piece(x2, y2, board_turtles)
+            delete_piece(x, y)
+            delete_piece(x2, y2)
         elif piece_type1 == "k" and piece_type2 == "K":
             print("Both are knights, detroying both")
-            delete_piece(x, y, board_turtles)
-            delete_piece(x2, y2, board_turtles)
+            delete_piece(x, y)
+            delete_piece(x2, y2)
         elif piece_type1 == "p" and piece_type2 == "K":
 
-            delete_piece(x, y, board_turtles)
+            delete_piece(x, y)
             # execute move for AI
             execute_move(x2, y2, new_x2, new_y2, SYMBOL_DICT[get_piece(y2, x2)])
         elif piece_type1 == "k" and piece_type2 == "P":
-            delete_piece(x2, y2, board_turtles)
+            delete_piece(x2, y2)
             # execute move for AI
             execute_move(x, y, new_x, new_y, SYMBOL_DICT[get_piece(y, x)])
     else:
@@ -389,10 +400,10 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
     test_symbol = SYMBOL_DICT[get_piece(y, x)]
     if test_symbol == symbol and force_delete == 3:
         # the other player did not move into our old location, we can delete whatever is there
-        delete_piece(x, y, board_turtles)
+        delete_piece(x, y)
     if force_delete == True:
         print("Force deleting the piece")
-        delete_piece(x, y, board_turtles)
+        delete_piece(x, y)
 
     # Get the turtle stored for the new block
     new_turtle = board_turtles[new_y][new_x]
@@ -498,9 +509,9 @@ def valid_move(x, y, newx, newy, playername):
 
 def ai_score(board_state):
     """
-    Computes the score of the board for the AI
+    Computes the score of the board for the AI using a weighted score heuristic
 
-    :param board_state: multidimensional list defining the board state
+    :param board_state: **multi-dimensional list** defining the board state
     :return: **numerical** returns score of the current board for the AI
     """
     current_score = 0
@@ -508,9 +519,9 @@ def ai_score(board_state):
     for row in range(5):
         for column in range(5):
             if board_state[row][column] == "K":
-                current_score += knight_points
+                current_score += KNIGHT_WEIGHTING
             elif board_state[row][column] == "P":
-                current_score += pawn_points
+                current_score += PAWN_WEIGHTING
                 current_pawns += 1
 
     player_score = 0
@@ -518,9 +529,9 @@ def ai_score(board_state):
     for row in range(5):
         for column in range(5):
             if board_state[row][column] == "k":
-                player_score += knight_points
+                player_score += KNIGHT_WEIGHTING
             elif board_state[row][column] == "p":
-                player_score += pawn_points
+                player_score += PAWN_WEIGHTING
                 player_pawns += 1
     if len(possible_moves(board_state, 0)) == 0:
         return float("-infinity")
@@ -539,10 +550,20 @@ def ai_score(board_state):
 
 def combine_moves(board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     """
-    Combines moves together
+    Combines two move onto a given board state without any drawing functionality
+    Uses the rules of simultaneous movement in Apocalypse when combining the moves
 
-    :param board_state:
-    :return:
+    :param board_state_val: **multi-dimensional list** Board state
+    :param x: **int** current x coord of the first piece to move
+    :param y: **int** current y coord of the first piece to move
+    :param new_x: **int** new x coord of the first piece to move
+    :param new_y: **int** new y coord of the first piece to move
+    :param x2: **int** current x coord of the second piece to move
+    :param y2: **int** current y coord of the second piece to move
+    :param new_x2: **int** new y coord of the second piece to move
+    :param new_y2: **int** new y coord of the second piece to move
+    :return: **multi-dimensional list** Board state with the moves combined
+
     """
     board_state = copy.deepcopy(board_state_val)
 
@@ -593,7 +614,15 @@ def combine_moves(board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
 
 def combine_single_move(board_state_val, x, y, new_x, new_y):
     """
-    Combines one move onto the desired board
+    Combines a single move onto a given board state without any drawing functionality
+    **Does not take simultaneous action into account**
+
+    :param board_state_val: **multi-dimensional list** Board state
+    :param x: **int** current x coord of the piece to move
+    :param y: **int** current y coord of the piece to move
+    :param new_x: **int** new x coord of the piece to move
+    :param new_y: **int** new y coord of the piece to move
+    :return: **multi-dimensional list** Board state with the move combined
     """
     board_state = copy.deepcopy(board_state_val)
 
@@ -613,6 +642,19 @@ def combine_single_move(board_state_val, x, y, new_x, new_y):
 
 
 def minimax_alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, top_tree=False):
+    """
+    Implements a Minimax algorithm with alpha beta pruning for calculating AI decisions
+    This function is recursively called and tries to mimic simultaneous movements
+
+    :param board_state: **multi-dimensional list** Board state
+    :param depth: **int** Current depth of the recursive call
+    :param MaxPlayer: **bool** Defines whether to minimize or maximize in the current recursive call
+    :param alpha: **float** Current alpha value for pruning purposes
+    :param beta: **float** Current beta value for pruning purposes
+    :param prev_move: **multi-dimensional list** **optional** List defining the previous move (set if the last call was maximizing
+    :param top_tree: **bool** **optional** True if the current node is at the top of the tree
+    :return: If its the terminal node, returns the score of the node
+    """
     board_copy = copy.deepcopy(board_state)
     if prev_move != 0:
         board_copy = combine_single_move(board_copy, prev_move[0], prev_move[1], prev_move[2], prev_move[3])
@@ -668,7 +710,11 @@ def minimax_alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, t
 
 def possible_moves(board_state, player_type):
     """
-    Generates possible AI moves given a board state
+    Generates possible moves for player_type on the given board_state
+
+    :param board_state: **multi-dimensional list** Represents the current board state
+    :param player_type: **int** 0 if AI, 1 if Player
+    :return: **multi-dimensional list** List that defines the possible moves that can be made by that player
     """
 
     # list to store the possible moves
@@ -778,9 +824,13 @@ def possible_moves(board_state, player_type):
     return possible_moves
 
 
-def delete_piece(x, y, board_turtles):
+def delete_piece(x, y):
     """
     This function will remove a board piece, and do the proper logic to remove the current location of it
+
+    :param x: **int** x coord of the piece to delete
+    :param y: **int** y coord of the piece to delete
+    :return:
     """
 
     # get the turtle at x, y
@@ -793,26 +843,30 @@ def delete_piece(x, y, board_turtles):
     cur_turtle.clear()
 
 
-def get_piece(row, column):
-    # gets the piece from the board at the specified coord
-    string_array = board
-
-    return string_array[row][column]
-
-
-def set_piece(row, column, new_val):
+def get_piece(x, y):
     """
-    Sets a value to the game state
+    Returns the piece from the board at the specified coord
 
-    :param row: **int** row of the piece to set
-    :param column: **int** column of the piece to set
+    :param x: **int** x coord of the piece to delete
+    :param y: **int** y coord of the piece to delete
+    :return:
+    """
+    return board[x][y]
+
+
+def set_piece(x, y, new_val):
+    """
+    Sets a given piece to a new value on the current global game state
+
+    :param x: **int** x coord of the piece to set
+    :param y: **int** y coord of the piece to set
     :param new_val: **string** value of the piece (ex. K, k, W, P, p)
     :return:
     """
-    # sets the given piece to a new value
+    # Want to edit the global copy
     global board
 
-    board[row][column] = new_val
+    board[x][y] = new_val
 
 
 def game_over():
@@ -822,9 +876,6 @@ def game_over():
     :return: **int** returns a value based upon the current state (0 = player won, 1 = ai won, 2 = stalemate, 3 = not game over)
     """
     print("Checking whether it is game over or not")
-
-    # returns 1 if the player won, 0 if the AI won, 2 if it is a stalemate
-    # returns 3 if the game is not over
 
     # check whether one of the players has made two illegal moves
     if penalty_points[0] == 2 and penalty_points[1] == 2:
@@ -848,6 +899,7 @@ def game_over():
             elif column == "p":
                 player_pieces += 1
     if ai_pieces == 0 and player_pieces == 0:
+        # no pawns on both sides
         return 2
     elif ai_pieces == 0:
         return 1
@@ -866,9 +918,9 @@ def penalty_add(player):
     """
 
     if player == "p":
-        penalty_index = 0 #Define player as index 0
+        penalty_index = 0
     else:
-        penalty_index = 1 #Define player as index 1
+        penalty_index = 1
 
     # add one to the penalty, and return the new board
     cur_val = int(penalty_points[penalty_index])
@@ -930,16 +982,16 @@ def penaltyCount():
 
     PenaltyTurtle.color("grey")
 
+    # Font sizes differ on Windows and Unix Platforms, use different scaling for both
     if platform.system() == "Windows":
-        #button_turtle.setpos(x, y - (init_y/1.4))
         PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (PENALTY_TEXT_HEIGHT/0.8))
     else:
-        #button_turtle.setpos(x, y - (init_y/1.65))
         PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (PENALTY_TEXT_HEIGHT/1))
 
 
     PenaltyTurtle.write("Penalty Points:", False, align="left", font=("Ariel", PENALTY_TEXT_HEIGHT))
 
+    # Font sizes differ on Windows and Unix Platforms, use different scaling for both
     if platform.system() == "Windows":
         #button_turtle.setpos(x, y - (init_y/1.4))
         PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.8))
@@ -1274,6 +1326,7 @@ def onclick_board_handler(x, y):
 
             column = 0
     else:
+        # check whether they clicked on a button
         for button in buttons:
             if button.check_clicked(x, y):
                 button.execute_function()
@@ -1325,17 +1378,6 @@ def button_event(x, y):
     for button in buttons:
         if button.check_clicked(x, y):
             button.execute_function()
-    """
-    WIDTH = 2
-    TOP_LEFT = 0
-    BOTTOM_LEFT = 1
-    HEIGHT = 3
-    FUNCTION = 5
-
-    for button in buttons:
-        if (button[TOP_LEFT] + button[WIDTH]) > x > button[TOP_LEFT] and button[BOTTOM_LEFT] > y > (button[BOTTOM_LEFT] - button[HEIGHT]):
-            exec(button[FUNCTION])
-    """
 
 
 def draw_main_bg():
@@ -1387,7 +1429,7 @@ def draw_main_bg():
 
 def draw_main_screen():
     """
-    Draws the main menu screen with created turtles and applies the proper event bindings for the buttons
+    Draws the main menu screen with created turtles and creates the main screen buttons
 
     :return:
     """
@@ -1418,7 +1460,7 @@ def draw_main_screen():
 
 def main_menu():
     """
-    Main function call, immediately draws the main menu screen
+    Main function call, immediately draws the main menu screen and sets the proper scaling values of the screen
 
     :return:
     """
@@ -1512,6 +1554,12 @@ def choose_difficulty():
     Button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(8); new_game()', screen.window_width()/3)
 
 def create_default_turtle(colour="white"):
+    """
+    Creates a default turtle with standard settings that are used in many places throughout the program
+
+    :param colour: **string** **optional** Colour of the turtle to set
+    :return: **object** Configured turtle
+    """
     temp_turtle = turtle.Turtle()
     temp_turtle.hideturtle()
     temp_turtle.color(colour)

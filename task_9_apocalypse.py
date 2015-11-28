@@ -909,9 +909,9 @@ def game_over():
             # no pawns on both sides
             return_val = STALEMATE
         elif ai_pieces == 0:
-            return_val = PLAYER_WON
-        elif player_pieces == 0:
             return_val = AI_WON
+        elif player_pieces == 0:
+            return_val = PLAYER_WON
         else:
             return_val = NOT_OVER
 
@@ -1140,6 +1140,15 @@ def onclick_board_handler(x, y):
     TOP_LEFT_Y = box_locations[0][0][1]
     BOTTOM_RIGHT_Y = box_locations[4][4][1]
 
+    HIGHLIGHT_TURTLE = 0
+    LAST_CLICK_COLUMN = 1
+    LAST_CLICK_ROW = 2
+    REDEPLOYING_PAWN = 3
+    REDEPLOY_TURTLE = 4
+
+    X_COORD = 0
+    Y_COORD = 1
+
     # check whether they clicked inside the board
     if TOP_LEFT_X < x < (BOTTOM_LEFT_X + BOX_WIDTH) and (BOTTOM_RIGHT_Y - BOX_WIDTH) < y < TOP_LEFT_Y:
         # Clicked inside of the board
@@ -1147,199 +1156,67 @@ def onclick_board_handler(x, y):
         # Want to edit the global copies of these vars
         global highlight_params, box_selected, board
 
-        if highlight_params[0] != 0:
+        # Check whether a box is already highlighted, if so, clear that turtle
+        if highlight_params[HIGHLIGHT_TURTLE] != 0:
             # already selected
-            highlight_params[0].clear()
+            highlight_params[HIGHLIGHT_TURTLE].clear()
 
-        selected_turtle = turtle.Turtle()
-
-        highlight_params[0] = selected_turtle
-        selected_turtle._tracer(False)
-        selected_turtle.hideturtle()
-        selected_turtle.color("#007AFF")
+        # create new turtle for highlighting squares
+        New_Highlight_Turtle = create_default_turtle("#007AFF")
+        highlight_params[HIGHLIGHT_TURTLE] = New_Highlight_Turtle
 
         row = 0
         column = 0
 
-        for n in box_locations:
+        for current_row in box_locations:
             row += 1
-            for i in n:
+            for current_box in current_row:
                 column += 1
 
-                if (i[0] + (BOARD_DIMENSION/5)) > x > i[0] and i[1] > y > (i[1] - (BOARD_DIMENSION/5)):
+                if (current_box[X_COORD] + BOX_WIDTH) > x > current_box[X_COORD] and current_box[Y_COORD] > y > (current_box[Y_COORD] - BOX_WIDTH):
+                    # They clicked in this box
+                    
+                    if column != highlight_params[LAST_CLICK_COLUMN] or row != highlight_params[LAST_CLICK_ROW]:
+                        # They clicked on a different square than last time
 
-                    # What is this for?  print(highlight_params[1], highlight_params[2], column, row)
-                    #print("Clicked on: Row", row, "& Column:", column)
-
-                    if column != highlight_params[1] or row != highlight_params[2]:
-
-                        if box_selected == 1 and not highlight_params[3]:
+                        if box_selected == 1 and not highlight_params[REDEPLOYING_PAWN]:
                             # move the piece, a move was made
+                            process_turn(row, column, current_box)
 
-                            # we don't want to let them click again while the AI move is being generated
-                            screen.onclick(None)
-                            # generate the AI move
-                            message_queue("Generating AI Move")
-                            print("GENERATING MINIMAX AI MOVE")
-                            copy_of_board = copy.deepcopy(board)
-                            #print("This is a board: " + str(board))
-                            generated_ai = minimax_alphabeta(copy_of_board, depth_amt, True, float("-infinity"), float("infinity"), 0, True)
-
-                            print(generated_ai)
-                            if generated_ai[1] == float("-infinity"):
-                                print("Doing random move to the board")
-                                generated_ai[0] = possible_moves(board, 0)[0][0]
-                            ai_val = generated_ai[0]
-                            print("AI MOVES: " + str(ai_val))
-
-                            if len(ai_val) == 1:
-                                ai_val = ai_val[0]
-
-                            print("==============\n\nAI Results:\nMove: " + str(ai_val))
-                            print(generated_ai)
-                            if len(ai_val) > 0:
-                                ai_type_val = get_piece(ai_val[0], ai_val[1])
-                            else:
-                                print("FALSE AI MOVE==============================")
-                                # the ai knows that there is no way they win if the player makes their best moves, still try to
-                                # we should check
-                                possible_ai_moves = possible_moves(board, 0)
-
-                                if len(possible_ai_moves) > 1:
-                                    # there is still a random move it can make to remedy the situation, try it out
-                                    # if the opponent doesn't make their best moves, it can still win
-                                    ai_val = possible_ai_moves[1]
-                                    ai_type_val = get_piece(ai_val[0], ai_val[1])
-                                else:
-                                    # there are no moves it can make
-                                    ai_val = False
-                            print("DONE GENERATING MINIMAX AI MOVE")
-
-                            player_validity = valid_move((highlight_params[2] - 1), (highlight_params[1] - 1), (row - 1), (column - 1), "p")
-                            player_type_val = get_piece((highlight_params[2] - 1), (highlight_params[1] - 1))
-                            print(player_validity)
-
-                            # check whether to upgrade the pawn to knight for the AI
-                            if ai_val != False and ai_type_val == "P" and ai_val[2] == 4 and knight_amount(board, 0) < 2:
-                                print("Upgraded AI pawn to knight")
-                                board[ai_val[0]][ai_val[1]] = "K"
-
-                            if ai_val != False and player_validity == True:
-                                # both made valid moves, we'll process them
-                                move_piece((highlight_params[1] - 1), (highlight_params[2] - 1), (column - 1), (row - 1), ai_val[1], ai_val[0], ai_val[3], ai_val[2])
-                            elif ai_val == False and player_validity == False:
-                                print("AI and Player Penalty")
-                                message_queue("Player Penalty")
-                                message_queue("AI Penalty")
-                                board = penalty_add("a")
-                                board = penalty_add("p")
-                            elif ai_val == False:
-                                # give the ai a penalty, and process the move
-                                print("AI Penalty")
-                                message_queue("AI Penalty")
-                                board = penalty_add("a")
-                                move_piece((highlight_params[1] - 1), (highlight_params[2] - 1), (column - 1), (row - 1), -1, 0, 0, 0)
-                            elif player_validity == False:
-                                print("Player Penalty")
-                                message_queue("Player Penalty")
-                                board = penalty_add("p")
-                                move_piece(-1, 0, 0, 0, ai_val[1], ai_val[0], ai_val[3], ai_val[2])
-
-
-                            print("Row",row,"Column",column)
-                            print("Pawn Type:",player_type_val)
-                            # rebind the onscreenclick since the user cannot click fast enough now to influence the game
-                            screen.onclick(onclick_board_handler)
-
-                            # check whether a player has moved to the end row with a pawn
-                            if player_type_val == "p" and (row - 1) == 0 and player_validity == True:
-                                print("Player pawn got to the last rank, checking how many knights they have")
-                                if knight_amount(board, 1) >= 2:
-                                    print("Allowing them to redeploy pawn, disabling saving")
-
-                                    screen.onkeyrelease(None, "s")
-                                    screen.onkeyrelease(None, "l")
-
-                                    highlight_params[3] = True
-                                    highlight_params[1] = column
-                                    highlight_params[2] = row
-                                    box_selected = 0
-
-                                    redeploy_turtle = turtle.Turtle()
-
-                                    highlight_params[4] = redeploy_turtle
-                                    redeploy_turtle._tracer(False)
-                                    redeploy_turtle.hideturtle()
-                                    redeploy_turtle.color("#FF9500")
-
-                                    redeploy_turtle.up()
-                                    redeploy_turtle.goto(i[0], i[1])
-                                    redeploy_turtle.down()
-                                    for i2 in range(4):
-                                        redeploy_turtle.forward(BOARD_DIMENSION/5)
-                                        redeploy_turtle.right(90)
-                                    redeploy_turtle.up()
-                                    message_queue("Redeploy Pawn to")
-                                    message_queue("a Vacant Square")
-                                else:
-                                    print("Changing piece to a knight")
-                                    execute_move((highlight_params[1] - 1), (highlight_params[2] - 1), column - 1, row - 1, "♘", "k", False)
-                                    #set_piece(board, (highlight_params[2] - 1), (highlight_params[1] - 1), "K")
-                                    box_selected = 0
-                                    highlight_params[0] = 0
-                                    highlight_params[1] = 0
-                                    highlight_params[2] = 0
-                            else:
-                                box_selected = 0
-                                highlight_params[0] = 0
-                                highlight_params[1] = 0
-                                highlight_params[2] = 0
-
-                            # check the game state, see whether someone won or not
-                            # maybe we should game the screen to reflect this???
+                            # Check whether it is game over
                             game_state = game_over()
                             if game_state != 3:
                                 game_end_screen(game_state)
 
                             print_board()
 
-                            #print("Possible AI Moves: " + str(possible_moves(board, 0)))
-                            #print("Possible Player Moves: " + str(possible_moves(board, 1)))
-                            #print("AI Score: " + str(ai_score(board)))
-
-                        elif highlight_params[3] == True and get_piece(row - 1, column - 1) == "W":
+                        elif highlight_params[3] is True and get_piece(row - 1, column - 1) == "W":
                             print("The user wants to redeploy the pawn, making the move")
-                            print(highlight_params)
                             execute_move((highlight_params[1] - 1), (highlight_params[2] - 1), (column - 1), (row - 1), "♙", "p", True)
-                            highlight_params[4].clear()
-                            highlight_params[0] = 0
-                            highlight_params[1] = 0
-                            highlight_params[2] = 0
-                            highlight_params[3] = False
+                            highlight_params[REDEPLOY_TURTLE].clear()
+
+                            reset_highlight_params()
                             # rebind the saving and loading
                             screen.onkeyrelease(save_state, "s")
                             screen.onkeyrelease(load_state, "l")
-                        elif (get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p") and highlight_params[3] == False:
+                        elif (get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p") and highlight_params[REDEPLOYING_PAWN] is False:
                             # only let the user select tiles it owns
-                            selected_turtle.up()
-                            selected_turtle.goto(i[0], i[1])
-                            selected_turtle.down()
+                            New_Highlight_Turtle.up()
+                            New_Highlight_Turtle.goto(current_box[0], current_box[1])
+                            New_Highlight_Turtle.down()
                             for i2 in range(4):
-                                selected_turtle.forward(BOARD_DIMENSION/5)
-                                selected_turtle.right(90)
-                            selected_turtle.up()
+                                New_Highlight_Turtle.forward(BOARD_DIMENSION/5)
+                                New_Highlight_Turtle.right(90)
+                            New_Highlight_Turtle.up()
                             box_selected = 1
 
                             # save x y coords from the turtle for future reference
                             highlight_params[1] = column
                             highlight_params[2] = row
                     else:
-                        if highlight_params[3] == False:
+                        if highlight_params[REDEPLOYING_PAWN] is False:
                             print("deselected same box")
-                            highlight_params[0] = 0
-                            highlight_params[1] = 0
-                            highlight_params[2] = 0
-                            box_selected = 0
+                            reset_highlight_params()
                         else:
                             print("You must redeploy to whitespace")
 
@@ -1349,6 +1226,164 @@ def onclick_board_handler(x, y):
         for button in buttons:
             if button.check_clicked(x, y):
                 button.execute_function()
+
+
+def process_turn(row, column, current_box):
+    # process turn
+    global board
+
+    HIGHLIGHT_TURTLE = 0
+    LAST_CLICK_COLUMN = 1
+    LAST_CLICK_ROW = 2
+    REDEPLOYING_PAWN = 3
+    REDEPLOY_TURTLE = 4
+
+    X_COORD = 0
+    Y_COORD = 1
+
+    AI = 0
+    PLAYER = 1
+
+    # we don't want to let them click again while the AI move is being generated
+    screen.onclick(None)
+
+    # generate the AI move
+    message_queue("Generating AI Move")
+
+    print("GENERATING MINIMAX AI MOVE")
+    copy_of_board = copy.deepcopy(board)
+
+    # Generate the AI move using -inf to inf alpha beta constraints and tell it this is the root node
+    generated_ai = minimax_alphabeta(copy_of_board, depth_amt, True, float("-infinity"), float("infinity"), 0, True)
+
+    # The AI didn't find a move that it determined it would win from, try to do any random move it can
+    if generated_ai[1] == float("-infinity"):
+        print("Doing random move to the board")
+        generated_ai[0] = possible_moves(board, 0)[0][0]
+
+    # Set the AI move to the actual move and not the score value
+    ai_val = generated_ai[0]
+    print("AI MOVE: " + str(ai_val))
+
+    print("\n\nAI Results:\nMove: " + str(ai_val))
+    print(generated_ai)
+
+    ai_val = ai_val[0]
+
+    ai_type_val = get_piece(ai_val[0], ai_val[1])
+
+    print("DONE GENERATING MINIMAX AI MOVE")
+
+    # Values are minus 1 since the board is from 0-4, not 1-5
+    player_validity = valid_move((highlight_params[LAST_CLICK_ROW] - 1), (highlight_params[LAST_CLICK_COLUMN] - 1), (row - 1), (column - 1), "p")
+    player_type_val = get_piece((highlight_params[LAST_CLICK_ROW] - 1), (highlight_params[LAST_CLICK_COLUMN] - 1))
+
+    # check whether to upgrade the pawn to knight for the AI
+    if ai_val is not False and ai_type_val == "P" and ai_val[2] == 4 and knight_amount(board, AI) < 2:
+        print("Upgraded AI pawn to knight")
+        board[ai_val[0]][ai_val[1]] = "K"
+
+    process_movements(ai_val, player_validity, row, column)
+
+    # rebind the onscreenclick since the user cannot click fast enough now to influence the game
+    screen.onclick(onclick_board_handler)
+
+    # check whether the player has moved to the end row with a pawn
+    if player_type_val == "p" and (row - 1) == 0 and player_validity is True:
+        print("Player pawn got to the last rank, checking how many knights they have")
+        if knight_amount(board, PLAYER) >= 2:
+            redeploy_player_pawn(current_box)
+        else:
+            print("Changing piece to a knight")
+            execute_move((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), column - 1, row - 1, "♘", "k", False)
+            reset_highlight_params()
+    else:
+        reset_highlight_params()
+
+    # Check whether it is game over
+    game_state = game_over()
+    if game_state != 3:
+        game_end_screen(game_state)
+
+    print_board()
+
+
+def process_movements(ai_val, player_validity, row, column):
+    global board
+
+    LAST_CLICK_COLUMN = 1
+    LAST_CLICK_ROW = 2
+
+    if ai_val is not False and player_validity is True:
+        # both made valid moves, we'll process them
+        move_piece((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), ai_val[1], ai_val[0], ai_val[3], ai_val[2])
+    elif ai_val is False and player_validity is False:
+        print("AI and Player Penalty")
+        message_queue("Player Penalty")
+        message_queue("AI Penalty")
+        board = penalty_add("a")
+        board = penalty_add("p")
+    elif ai_val is False:
+        # give the ai a penalty, and process the move
+        print("AI Penalty")
+        message_queue("AI Penalty")
+        board = penalty_add("a")
+        move_piece((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), -1, 0, 0, 0)
+    elif player_validity is False:
+        print("Player Penalty")
+        message_queue("Player Penalty")
+        board = penalty_add("p")
+        move_piece(-1, 0, 0, 0, ai_val[1], ai_val[0], ai_val[3], ai_val[2])
+
+def redeploy_player_pawn(current_box):
+    global highlight_params, box_selected
+
+    HIGHLIGHT_TURTLE = 0
+    LAST_CLICK_COLUMN = 1
+    LAST_CLICK_ROW = 2
+    REDEPLOYING_PAWN = 3
+    REDEPLOY_TURTLE = 4
+
+    print("Allowing them to redeploy pawn, disabling saving")
+
+    screen.onkeyrelease(None, "s")
+    screen.onkeyrelease(None, "l")
+
+    highlight_params[REDEPLOYING_PAWN] = True
+    highlight_params[LAST_CLICK_COLUMN] = column
+    highlight_params[LAST_CLICK_ROW] = row
+    box_selected = 0
+
+    new_redeploy_turtle = turtle.Turtle()
+
+    highlight_params[REDEPLOY_TURTLE] = new_redeploy_turtle
+    new_redeploy_turtle._tracer(False)
+    new_redeploy_turtle.hideturtle()
+    new_redeploy_turtle.color("#FF9500")
+
+    new_redeploy_turtle.up()
+    new_redeploy_turtle.goto(current_box[0], current_box[1])
+    new_redeploy_turtle.down()
+    for i2 in range(4):
+        new_redeploy_turtle.forward(BOARD_DIMENSION/5)
+        new_redeploy_turtle.right(90)
+    new_redeploy_turtle.up()
+    message_queue("Redeploy Pawn to")
+    message_queue("a Vacant Square")
+
+def reset_highlight_params():
+    """
+    Reset the values of highlight_params and box_selected
+
+    :return:
+    """
+    global highlight_params, box_selected
+
+    highlight_params[0] = 0
+    highlight_params[1] = 0
+    highlight_params[2] = 0
+    highlight_params[3] = False
+    box_selected = 0
 
 
 def game_end_screen(winner):

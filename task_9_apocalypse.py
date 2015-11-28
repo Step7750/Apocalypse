@@ -27,7 +27,7 @@ import copy       # for deep copies (for the minimax ai)
 
 # set the score weighting for pawns and knights
 knight_points = 1
-pawn_points = 2
+pawn_points = 1
 
 # if one pawn left, value it much higher
 # algorithm that values the pieces dynamically
@@ -617,13 +617,19 @@ def possible_moves(board_state, player_type):
                     if player_type == 0:
                         if board_state[offset_val][(y + 1)] == "k" or board_state[offset_val][(y + 1)] == "p":
                             if movement_upgrade:
-                                possible_moves.append([[x, y, offset_val, (y + 1)], 1])
+                                if board_state[offset_val][(y + 1)] == "p":
+                                    possible_moves.append([[x, y, offset_val, (y + 1)], 2])
+                                else:
+                                    possible_moves.append([[x, y, offset_val, (y + 1)], 1])
                             else:
                                 valid_move_val = True
                     else:
                         if board_state[offset_val][(y + 1)] == "K" or board_state[offset_val][(y + 1)] == "P":
                             if movement_upgrade:
-                                possible_moves.append([[x, y, offset_val, (y + 1)], 1])
+                                if board_state[offset_val][(y + 1)] == "p":
+                                    possible_moves.append([[x, y, offset_val, (y + 1)], 2])
+                                else:
+                                    possible_moves.append([[x, y, offset_val, (y + 1)], 1])
                             else:
                                 valid_move_val = True
                 if 0 <= offset_val < 5 and 0 <= (y - 1) < 5:
@@ -631,13 +637,19 @@ def possible_moves(board_state, player_type):
                     if player_type == 0:
                         if board_state[offset_val][(y - 1)] == "k" or board_state[offset_val][(y - 1)] == "p":
                             if movement_upgrade:
-                                possible_moves.append([[x, y, offset_val, (y - 1)], 1])
+                                if board_state[offset_val][(y - 1)] == "p":
+                                    possible_moves.append([[x, y, offset_val, (y - 1)], 2])
+                                else:
+                                    possible_moves.append([[x, y, offset_val, (y - 1)], 1])
                             else:
                                 valid_move_val = True
                     else:
                         if board_state[offset_val][(y - 1)] == "K" or board_state[offset_val][(y - 1)] == "P":
                             if movement_upgrade:
-                                possible_moves.append([[x, y, offset_val, (y - 1)], 1])
+                                if board_state[offset_val][(y - 1)] == "P":
+                                    possible_moves.append([[x, y, offset_val, (y - 1)], 2])
+                                else:
+                                    possible_moves.append([[x, y, offset_val, (y - 1)], 1])
                             else:
                                 valid_move_val = True
                 if 0 <= offset_val < 5:
@@ -999,7 +1011,7 @@ def onclick_board_handler(x, y):
                             print(generated_ai)
                             if generated_ai[1] == float("-infinity"):
                                 print("Doing random move to the board")
-                                generated_ai[0] = possible_moves(board, 0)[0]
+                                generated_ai[0] = possible_moves(board, 0)[0][0]
                             ai_val = generated_ai[0]
                             print("AI MOVES: " + str(ai_val))
 

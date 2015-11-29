@@ -95,6 +95,9 @@ box_selected = 0
 # stores objects of created buttons
 buttons = []
 
+# used by displayMove to determine whether Player or AI is moving
+move_counter = 0
+
 # creates the move offset that is needed to increment by everytime a new message is printed (creates extra var to save it)
 moveOffset = BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.7) - (PENALTY_TEXT_HEIGHT * 1.5)
 SAVED_OFFSET = moveOffset
@@ -954,6 +957,13 @@ def displayMove(x, y, new_x, new_y):
     :param new_y: **int** y coord of the new piece position
     :return:
     """
+    global move_counter
+    if move_counter%2 == 0:
+        message_queue("Player moved: ")
+        move_counter+=1
+    else:
+        message_queue("AI moved: ")
+        move_counter+=1
     to_write = str(y+1) + ", " + str(x+1) + " to " + str(new_y+1) + ", " + str(new_x+1)
     message_queue(to_write)
 
@@ -1175,7 +1185,7 @@ def onclick_board_handler(x, y):
 
                 if (current_box[X_COORD] + BOX_WIDTH) > x > current_box[X_COORD] and current_box[Y_COORD] > y > (current_box[Y_COORD] - BOX_WIDTH):
                     # They clicked in this box
-                    
+
                     if column != highlight_params[LAST_CLICK_COLUMN] or row != highlight_params[LAST_CLICK_ROW]:
                         # They clicked on a different square than last time
 
@@ -1310,6 +1320,7 @@ def process_turn(row, column, current_box):
 
 def process_movements(ai_val, player_validity, row, column):
     global board
+    global move_counter
 
     LAST_CLICK_COLUMN = 1
     LAST_CLICK_ROW = 2
@@ -1325,11 +1336,13 @@ def process_movements(ai_val, player_validity, row, column):
         board = penalty_add("p")
     elif ai_val is False:
         # give the ai a penalty, and process the move
+        move_counter+=1
         print("AI Penalty")
         message_queue("AI Penalty")
         board = penalty_add("a")
         move_piece((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), -1, 0, 0, 0)
     elif player_validity is False:
+        move_counter+=1
         print("Player Penalty")
         message_queue("Player Penalty")
         board = penalty_add("p")

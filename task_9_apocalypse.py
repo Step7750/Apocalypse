@@ -957,12 +957,12 @@ def displayMove(x, y, new_x, new_y):
     :return:
     """
     global move_counter
-    if counter%2==0:
+    if move_counter%2==0:
         message_queue("Player moved: ")
-        counter+=1
+        move_counter+=1
     else:
         message_queue("AI moved: ")
-        counter+=1
+        move_counter+=1
     to_write = str(y+1) + ", " + str(x+1) + " to " + str(new_y+1) + ", " + str(new_x+1)
     message_queue(to_write)
 

@@ -1292,7 +1292,7 @@ def process_turn(row, column, current_box):
     if player_type_val == "p" and (row - 1) == 0 and player_validity is True:
         print("Player pawn got to the last rank, checking how many knights they have")
         if knight_amount(board, PLAYER) >= 2:
-            redeploy_player_pawn(current_box)
+            redeploy_player_pawn(current_box, row, column)
         else:
             print("Changing piece to a knight")
             execute_move((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), column - 1, row - 1, "♘", "k", False)
@@ -1335,7 +1335,7 @@ def process_movements(ai_val, player_validity, row, column):
         board = penalty_add("p")
         move_piece(-1, 0, 0, 0, ai_val[1], ai_val[0], ai_val[3], ai_val[2])
 
-def redeploy_player_pawn(current_box):
+def redeploy_player_pawn(current_box, row, column):
     global highlight_params, box_selected
 
     HIGHLIGHT_TURTLE = 0

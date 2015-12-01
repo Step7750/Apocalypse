@@ -1226,6 +1226,8 @@ def select_tile(New_Highlight_Turtle, current_box, column, row):
 
     LAST_CLICK_COLUMN = 1
     LAST_CLICK_ROW = 2
+    X_COORD = 0
+    Y_COORD = 1
 
     # only let the user select tiles it owns
     New_Highlight_Turtle.up()

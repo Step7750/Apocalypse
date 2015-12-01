@@ -18,12 +18,12 @@ Things that still need to be worked on:
 
 Task 8:
 * ~~MiniMax AI w/ Alpha Beta Pruning (Also gives recursion bonus points)~~ ~~There might be bugs...I'll add code that takes the scores and gets the immediate best option~~
-* Try to beat the AI on hard difficulty
+* ~~Try to beat the AI on hard difficulty~~
 * ~~Choice of AI Difficulty~~
 
 Task 9:
-* Utilize classes to simplify code structure
-* Add more heuristics to improve the AI speed and increase depth
+* Utilize classes to simplify code structure - Done on buttons
+* ~~Add more heuristics to improve the AI speed and increase depth~~
 * Improve weighting system structure to be dynamic
 * ~~Main Menu screen that allows you to play, how to play, etc...~~
 * ~~Function that creates clickable buttons~~

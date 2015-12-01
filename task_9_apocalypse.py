@@ -1321,8 +1321,9 @@ def process_turn(row, column, current_box):
 
     if ai_val is not False:
         ai_val = ai_val[0]
-
-    ai_type_val = get_piece(ai_val[0], ai_val[1])
+        ai_type_val = get_piece(ai_val[0], ai_val[1])
+    else:
+        ai_type_val = "W"
 
     print("DONE GENERATING MINIMAX AI MOVE")
 

@@ -1270,7 +1270,7 @@ def process_turn(row, column, current_box):
     # The AI didn't find a move that it determined it would win from, try to do any random move it can
     if generated_ai[1] == float("-infinity"):
         # it didn't find a move that seemed promising at this depth level, lets try to use lower depth levels
-        for depth in range(depth_amt-1, 0, -1):
+        for depth in range(depth_amt-1, 1, -1):
             print("Generating at a depth level of " + str(depth))
             copy_of_board = copy.deepcopy(board)
             generated_ai = minimax_alphabeta(copy_of_board, depth, True, float("-infinity"), float("infinity"), 0, True)
@@ -1278,8 +1278,8 @@ def process_turn(row, column, current_box):
                 break
         if generated_ai[1] == float("-infinity"):
             # just add a penalty point, we've found absolutely no valid moves, oh well :(
+            # forcing a penalty
             generated_ai[0] = False
-        print("Doing random move to the board")
 
     # Set the AI move to the actual move and not the score value
     ai_val = generated_ai[0]

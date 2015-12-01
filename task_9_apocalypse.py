@@ -1200,9 +1200,9 @@ def onclick_board_handler(x, y):
 
                             print_board()
 
-                        elif highlight_params[3] is True and get_piece(row - 1, column - 1) == "W":
+                        elif highlight_params[REDEPLOYING_PAWN] is True and get_piece(row - 1, column - 1) == "W":
                             print("The user wants to redeploy the pawn, making the move")
-                            execute_move((highlight_params[1] - 1), (highlight_params[2] - 1), (column - 1), (row - 1), "♙", "p", True)
+                            execute_move((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), "♙", "p", True)
                             highlight_params[REDEPLOY_TURTLE].clear()
 
                             reset_highlight_params()
@@ -1212,7 +1212,7 @@ def onclick_board_handler(x, y):
                         elif (get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p") and highlight_params[REDEPLOYING_PAWN] is False:
                             # only let the user select tiles it owns
                             New_Highlight_Turtle.up()
-                            New_Highlight_Turtle.goto(current_box[0], current_box[1])
+                            New_Highlight_Turtle.goto(current_box[X_COORD], current_box[Y_COORD])
                             New_Highlight_Turtle.down()
                             for i2 in range(4):
                                 New_Highlight_Turtle.forward(BOARD_DIMENSION/5)
@@ -1221,8 +1221,8 @@ def onclick_board_handler(x, y):
                             box_selected = 1
 
                             # save x y coords from the turtle for future reference
-                            highlight_params[1] = column
-                            highlight_params[2] = row
+                            highlight_params[LAST_CLICK_COLUMN] = column
+                            highlight_params[LAST_CLICK_ROW] = row
                     else:
                         if highlight_params[REDEPLOYING_PAWN] is False:
                             print("deselected same box")

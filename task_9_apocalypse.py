@@ -22,7 +22,7 @@ Features:
 import turtle
 import platform   # used to know what the general display scaling should be
 import copy       # for deep copies (for the minimax ai)
-
+import os
 
 
 # set the score weighting for pawns and knights
@@ -1205,9 +1205,11 @@ def onclick_board_handler(x, y):
                             redeploy_pawn(column, row)
                         elif (get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p") and highlight_params[REDEPLOYING_PAWN] is False:
                             # only let the user select tiles it owns
+                            os.system("afplay mouseDeselect.mp3&")
                             select_tile(New_Highlight_Turtle, current_box, column, row)
                     else:
                         if highlight_params[REDEPLOYING_PAWN] is False:
+                            os.system("afplay mouseDeselect.mp3&")
                             print("deselected same box")
                             reset_highlight_params()
                         else:

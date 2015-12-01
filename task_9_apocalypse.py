@@ -529,8 +529,9 @@ def ai_score(board_state):
     if len(possible_moves(board_state, 0)) == 0:
         return_val = float("-infinity")
     elif ai_pawns == 0 and player_pawns == 0:
-        # stalemate, return value of 0
-        return_val = 0
+        # stalemate, return value of infinity
+        # this could cause some confusion for the bot to force a stalemate rather than win
+        return_val = float("infinity")
     elif ai_pawns == 0:
         # the player won
         return_val = float("-infinity")
@@ -1268,8 +1269,17 @@ def process_turn(row, column, current_box):
 
     # The AI didn't find a move that it determined it would win from, try to do any random move it can
     if generated_ai[1] == float("-infinity"):
+        # it didn't find a move that seemed promising at this depth level, lets try to use lower depth levels
+        for depth in range(depth_amt-1, 0, -1):
+            print("Generating at a depth level of " + str(depth))
+            copy_of_board = copy.deepcopy(board)
+            generated_ai = minimax_alphabeta(copy_of_board, depth, True, float("-infinity"), float("infinity"), 0, True)
+            if generated_ai[1] != float("-infinity"):
+                break
+        if generated_ai[1] == float("-infinity"):
+            # just add a penalty point, we've found absolutely no valid moves, oh well :(
+            generated_ai[0] = False
         print("Doing random move to the board")
-        generated_ai[0] = possible_moves(board, 0)[0][0]
 
     # Set the AI move to the actual move and not the score value
     ai_val = generated_ai[0]
@@ -1348,6 +1358,7 @@ def process_movements(ai_val, player_validity, row, column):
         board = penalty_add("p")
         move_piece(-1, 0, 0, 0, ai_val[1], ai_val[0], ai_val[3], ai_val[2])
 
+
 def redeploy_player_pawn(current_box, row, column):
     global highlight_params, box_selected
 
@@ -1383,6 +1394,7 @@ def redeploy_player_pawn(current_box, row, column):
     new_redeploy_turtle.up()
     message_queue("Redeploy Pawn to")
     message_queue("a Vacant Square")
+
 
 def reset_highlight_params():
     """

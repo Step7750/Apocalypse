@@ -1319,7 +1319,8 @@ def process_turn(row, column, current_box):
     print("\n\nAI Results:\nMove: " + str(ai_val))
     print(generated_ai)
 
-    ai_val = ai_val[0]
+    if ai_val is not False:
+        ai_val = ai_val[0]
 
     ai_type_val = get_piece(ai_val[0], ai_val[1])
 
@@ -1661,7 +1662,7 @@ def choose_difficulty():
     difficulty_turtle.write("Difficulty", True, align="center", font=("Ariel", int(screen.window_width()/12)))
     Button(0, -(screen.window_height()/20), "Easy", 'modify_difficulty(1); new_game()', screen.window_width()/3)
     Button(0, -(screen.window_height()/7), "Medium", 'modify_difficulty(4); new_game()', screen.window_width()/3)
-    Button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(8); new_game()', screen.window_width()/3)
+    Button(0, -(screen.window_height()/4.2), "Hard", 'modify_difficulty(7); new_game()', screen.window_width()/3)
 
 def create_default_turtle(colour="white"):
     """

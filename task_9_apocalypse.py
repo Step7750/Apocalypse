@@ -1186,7 +1186,6 @@ def onclick_board_handler(x, y):
 
                 if (current_box[X_COORD] + BOX_WIDTH) > x > current_box[X_COORD] and current_box[Y_COORD] > y > (current_box[Y_COORD] - BOX_WIDTH):
                     # They clicked in this box
-
                     if column != highlight_params[LAST_CLICK_COLUMN] or row != highlight_params[LAST_CLICK_ROW]:
                         # They clicked on a different square than last time
 
@@ -1203,27 +1202,10 @@ def onclick_board_handler(x, y):
 
                         elif highlight_params[REDEPLOYING_PAWN] is True and get_piece(row - 1, column - 1) == "W":
                             print("The user wants to redeploy the pawn, making the move")
-                            execute_move((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), "♙", "p", True)
-                            highlight_params[REDEPLOY_TURTLE].clear()
-
-                            reset_highlight_params()
-                            # rebind the saving and loading
-                            screen.onkeyrelease(save_state, "s")
-                            screen.onkeyrelease(load_state, "l")
+                            redeploy_pawn(column, row)
                         elif (get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p") and highlight_params[REDEPLOYING_PAWN] is False:
                             # only let the user select tiles it owns
-                            New_Highlight_Turtle.up()
-                            New_Highlight_Turtle.goto(current_box[X_COORD], current_box[Y_COORD])
-                            New_Highlight_Turtle.down()
-                            for i2 in range(4):
-                                New_Highlight_Turtle.forward(BOARD_DIMENSION/5)
-                                New_Highlight_Turtle.right(90)
-                            New_Highlight_Turtle.up()
-                            box_selected = 1
-
-                            # save x y coords from the turtle for future reference
-                            highlight_params[LAST_CLICK_COLUMN] = column
-                            highlight_params[LAST_CLICK_ROW] = row
+                            select_tile(New_Highlight_Turtle, current_box, column, row)
                     else:
                         if highlight_params[REDEPLOYING_PAWN] is False:
                             print("deselected same box")
@@ -1239,7 +1221,52 @@ def onclick_board_handler(x, y):
                 button.execute_function()
 
 
+def select_tile(New_Highlight_Turtle, current_box, column, row):
+    global box_selected, highlight_params
+
+    LAST_CLICK_COLUMN = 1
+    LAST_CLICK_ROW = 2
+
+    # only let the user select tiles it owns
+    New_Highlight_Turtle.up()
+    New_Highlight_Turtle.goto(current_box[X_COORD], current_box[Y_COORD])
+    New_Highlight_Turtle.down()
+    for i2 in range(4):
+        New_Highlight_Turtle.forward(BOARD_DIMENSION/5)
+        New_Highlight_Turtle.right(90)
+    New_Highlight_Turtle.up()
+    box_selected = 1
+
+    # save x y coords from the turtle for future reference
+    highlight_params[LAST_CLICK_COLUMN] = column
+    highlight_params[LAST_CLICK_ROW] = row
+
+
+def redeploy_pawn(column, row):
+    global highlight_params
+
+    LAST_CLICK_COLUMN = 1
+    LAST_CLICK_ROW = 2
+    REDEPLOY_TURTLE = 4
+
+    execute_move((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), "♙", "p", True)
+    highlight_params[REDEPLOY_TURTLE].clear()
+
+    reset_highlight_params()
+    # rebind the saving and loading
+    screen.onkeyrelease(save_state, "s")
+    screen.onkeyrelease(load_state, "l")
+
+
 def process_turn(row, column, current_box):
+    """
+    Processes a given valid turn for the player and ai, also calls the AI to generate its move here
+
+    :param row: **int**
+    :param column:
+    :param current_box:
+    :return:
+    """
     # process turn
     global board
 

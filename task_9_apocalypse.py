@@ -670,21 +670,26 @@ def minimax_alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, t
         moves = sorted(moves, key=lambda x: x[1], reverse=True)
         if top_tree:
             best_move = []
+            old_piece = []
 
         for move in moves:
-            move = move[0]
+            clean_move = move[0]
             #print("Max Depth " + str(depth) + " Board: " + str(board_copy))
-            val = minimax_alphabeta(copy.deepcopy(board_copy), depth - 1, False, alpha, beta, move)
+            val = minimax_alphabeta(copy.deepcopy(board_copy), depth - 1, False, alpha, beta, clean_move)
             #print("Score of " + str(val))
             if val > best_val:
-                best_move = move
+                best_move = clean_move
+                if len(move) == 3:
+                    # this contains values about the piece that died in this process
+                    old_piece = move[2]
+
             best_val = max(best_val, val)
             alpha = max(best_val, alpha)
 
             if beta <= alpha:
                 break
         if top_tree:
-            return [[best_move], best_val]
+            return [[best_move, old_piece], best_val]
         else:
             return best_val
     else:
@@ -763,6 +768,7 @@ def possible_moves(board_state, player_type):
                 movement_upgrade = ((player_type == 0 and offset_val != 4) or (player_type == 1 and offset_val != 0)) or ((knight_amount(board_state, player_type) < 2) and ((player_type == 0 and offset_val == 4) or (player_type == 1 and offset_val == 0)))
 
                 valid_move_val = False
+                move_vals = []
                 # check going diagonally right
                 if 0 <= offset_val < 5 and 0 <= (y + 1) < 5:
                     # it is within the constraints of the board, check whether there is an enemy there
@@ -775,6 +781,7 @@ def possible_moves(board_state, player_type):
                                     possible_moves.append([[x, y, offset_val, (y + 1)], 1])
                             else:
                                 valid_move_val = True
+                                move_vals.append([x, y, offset_val, (y + 1)])
                     else:
                         if board_state[offset_val][(y + 1)] == "K" or board_state[offset_val][(y + 1)] == "P":
                             if movement_upgrade:
@@ -784,6 +791,7 @@ def possible_moves(board_state, player_type):
                                     possible_moves.append([[x, y, offset_val, (y + 1)], 1])
                             else:
                                 valid_move_val = True
+                                move_vals.append([x, y, offset_val, (y + 1)])
                 if 0 <= offset_val < 5 and 0 <= (y - 1) < 5:
                     # it is within the constraints of the board, check whether there is an enemy there
                     if player_type == 0:
@@ -795,6 +803,7 @@ def possible_moves(board_state, player_type):
                                     possible_moves.append([[x, y, offset_val, (y - 1)], 1])
                             else:
                                 valid_move_val = True
+                                move_vals.append([x, y, offset_val, (y - 1)])
                     else:
                         if board_state[offset_val][(y - 1)] == "K" or board_state[offset_val][(y - 1)] == "P":
                             if movement_upgrade:
@@ -804,6 +813,7 @@ def possible_moves(board_state, player_type):
                                     possible_moves.append([[x, y, offset_val, (y - 1)], 1])
                             else:
                                 valid_move_val = True
+                                move_vals.append([x, y, offset_val, (y - 1)])
                 if 0 <= offset_val < 5:
                     # check whether it is going forward
                     # check whether forward is whitespace or not
@@ -812,15 +822,17 @@ def possible_moves(board_state, player_type):
                             possible_moves.append([[x, y, offset_val, y], 0])
                         else:
                             valid_move_val = True
-                if not movement_upgrade and valid_move_val == True:
+                            move_vals.append([x, y, offset_val, y])
+                if not movement_upgrade and valid_move_val is True:
                     # pawn reached last rank and they have 2 knights already
                     # allow them to redeploy, generate possible moves
-                    for tempx in range(5):
-                        for tempy in range(5):
-                            temp_piece_type = board_state[tempx][tempy]
-                            if temp_piece_type == "W":
-                                # this is a possibility
-                                possible_moves.append([[x, y, tempx, tempy], 0])
+                    for move_output in move_vals:
+                        for tempx in range(5):
+                            for tempy in range(5):
+                                temp_piece_type = board_state[tempx][tempy]
+                                if temp_piece_type == "W":
+                                    # this is a possibility
+                                    possible_moves.append([[x, y, tempx, tempy], 0, move_output])
     return possible_moves
 
 
@@ -1311,7 +1323,7 @@ def process_turn(row, column, current_box):
             # just add a penalty point, we've found absolutely no valid moves, oh well :(
             # forcing a penalty
             generated_ai[0] = False
-
+    print(generated_ai)
     # Set the AI move to the actual move and not the score value
     ai_val = generated_ai[0]
     print("AI MOVE: " + str(ai_val))
@@ -1353,12 +1365,11 @@ def process_turn(row, column, current_box):
     else:
         reset_highlight_params()
 
-    # Check whether it is game over
-    game_state = game_over()
-    if game_state != 3:
-        game_end_screen(game_state)
-
-    print_board()
+    # check whether the AI deleted a piece when redeploying
+    if len(generated_ai[0][1]) > 0:
+        print(generated_ai[0][1])
+        redeploy_location = generated_ai[0][1]
+        delete_piece(redeploy_location[3], redeploy_location[2])
 
 
 def process_movements(ai_val, player_validity, row, column):

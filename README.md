@@ -22,7 +22,7 @@ Task 8:
 * ~~Choice of AI Difficulty~~
 
 Task 9:
-* Utilize classes to simplify code structure - Done on buttons
+* ~~Utilize classes to simplify code structure~~ - Done on buttons
 * ~~Add more heuristics to improve the AI speed and increase depth~~
 * Improve weighting system structure to be dynamic
 * ~~Main Menu screen that allows you to play, how to play, etc...~~
@@ -30,7 +30,7 @@ Task 9:
 * ~~Fix positioning of penalty points and the queue~~
 
 Task 10 (Optional):
-* Add sounds and music to the game that changes based upon the difficulty played
+* ~~Add sounds and music to the game that changes based upon the difficulty played~~ - Function is there, add more sounds if you want
 * ~~Remove the text at the top of the game board~~ Completed in Task 9
 * Add the destroyed pieces of AI and the player to the bottom of the game board
 

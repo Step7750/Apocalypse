@@ -37,7 +37,7 @@ Task 10 (Optional):
 # Bugs
 
 Current Bugs:
-* If the AI is redeploying a pawn and kills one of yours on the last rank, it won't kill it and will just teleport to its desired redeploy location
+* ~~If the AI is redeploying a pawn and kills one of yours on the last rank, it won't kill it and will just teleport to its desired redeploy location~~ Should be fixed
 
 # How to Use
 

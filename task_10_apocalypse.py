@@ -1077,11 +1077,12 @@ def load_state():
     :return:
     """
     try:
-        global penalty_points, board, moveOffset
+        global penalty_points, board, moveOffset, depth_amt
         file_obj = open("saved_board.apoc", "r")
 
         penalty_line = file_obj.readline().split(" ")
         penalty_points = [int(penalty_line[0]), int(penalty_line[1])]
+        depth_amt = int(file_obj.readline())
         board_new_data = []
         for line in file_obj:
             split_data = line.replace("\n", "").split(" ")
@@ -1119,11 +1120,13 @@ def save_state():
     :return:
     """
     # we don't want to let them save while a pawn is redeploying (can cause game mechanics issues)
-    if highlight_params[3] == False:
+    if highlight_params[3] is False:
         try:
             file_obj = open("saved_board.apoc", "w")
             # the file is just a single line defining the state
-            line_to_write = str(penalty_points[0]) + " " + str(penalty_points[1])
+            line_to_write = str(penalty_points[0]) + " " + str(penalty_points[1]) + "\n"
+            #store the depth amt (difficulty)
+            line_to_write += str(depth_amt)
             for line in board:
                 line_to_write += "\n" + " ".join(line)
             file_obj.write(line_to_write)

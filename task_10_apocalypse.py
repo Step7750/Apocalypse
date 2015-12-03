@@ -27,7 +27,7 @@ import os
 # libraries used for sounds for various platforms
 if platform.system() == "Windows":
     import winsound
-elif platform.system() == "linux":
+elif platform.system() == "Linux":
     from wave import open as waveOpen
     from ossaudiodev import open as ossOpen
 
@@ -1637,6 +1637,7 @@ def new_game():
 
     # reset the game state and draw it out
     reset_game_state()
+    reset_highlight_params()
     draw_board()
     penaltyCount()
 
@@ -1720,9 +1721,9 @@ def play_sound(sound_file):
     # Since we can't use external libraries, this solution works: http://stackoverflow.com/a/311634
     if platform.system() == "Windows":
         winsound.PlaySound(sound_file, winsound.SND_FILENAME)
-    elif platform.system() == "darwin":
+    elif platform.system() == "Darwin":
         os.system("afplay " + sound_file + "&")
-    elif platform.system() == "linux":
+    elif platform.system() == "Linux":
         s = waveOpen(sound_file,'rb')
         (nc,sw,fr,nf,comptype, compname) = s.getparams( )
         dsp = ossOpen('/dev/dsp','w')

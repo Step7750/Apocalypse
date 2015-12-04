@@ -5,6 +5,8 @@ Play the game of Apocalypse! A simultaneous game based upon the principles of ch
 
 The rules can be found here: https://en.wikipedia.org/wiki/Apocalypse_(chess_variant)
 
+The program functions are neatly divided into different sections to define different areas of the program.
+Two classes for the button and AI are used to simplify the code structure.
 
 Created by: Stepan Fedorko-Bartos, Khesualdo Condori Barykin, Cameron Davies, Michael Shi
 
@@ -16,6 +18,12 @@ Features:
 - Variable levels of AI difficulty (Can you beat it on hard?)
 - Advanced MiniMax AI w/ Alpha Beta Pruning (that handles the simultaneous nature of Apocalypse)
 - Uses Recursion for the MiniMax AI
+- Uses sorting heuristics to speed up the alpha beta constraints and AI move generation
+- Sounds that work on most platforms (Windows, Linux, Mac OSX)
+- Classes for the buttons and AI to simplify code structure
+
+For sounds, since we can't use external libraries, we used this solution for Linux and Windows:
+http://stackoverflow.com/a/311634
 
 """
 
@@ -32,8 +40,7 @@ elif platform.system() == "Linux":
     from ossaudiodev import open as ossOpen
 
 
-
-# set the score weighting for pawns and knights
+# set the score weighting for pawns and knights (for the AI)
 KNIGHT_WEIGHTING = 1
 PAWN_WEIGHTING = 1
 
@@ -349,7 +356,9 @@ class AI_Move:
         # list to store the possible moves
         possible_moves = []
 
+        # Possible knight move offsets
         knight_moves = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]
+
         for x in range(5):
             for y in range(5):
                 piece_type = board_state[x][y]

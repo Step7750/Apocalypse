@@ -6,7 +6,7 @@ Play the game of Apocalypse! A simultaneous game based upon the principles of ch
 The rules can be found here: https://en.wikipedia.org/wiki/Apocalypse_(chess_variant)
 
 The program functions are neatly divided into different sections to define different areas of the program.
-Two classes for the button and AI are used to simplify the code structure.
+There are classes for the board drawing, AI, and buttons
 
 Created by: Stepan Fedorko-Bartos, Khesualdo Condori Barykin, Cameron Davies, Michael Shi
 
@@ -523,7 +523,7 @@ class BoardDraw:
 
 """
 
-Button Class
+Button Class and Delete Function
 
 """
 
@@ -1044,6 +1044,7 @@ def create_default_turtle(colour="white"):
     temp_turtle.up()
     return temp_turtle
 
+
 """
 
 Piece Handler and Game Logic Functions
@@ -1484,15 +1485,12 @@ def onclick_board_handler(x, y):
     LAST_CLICK_COLUMN = 1
     LAST_CLICK_ROW = 2
     REDEPLOYING_PAWN = 3
-    REDEPLOY_TURTLE = 4
 
     X_COORD = 0
     Y_COORD = 1
 
     # check whether they clicked inside the board
     if TOP_LEFT_X < x < (BOTTOM_LEFT_X + BOX_WIDTH) and (BOTTOM_RIGHT_Y - BOX_WIDTH) < y < TOP_LEFT_Y:
-        # Clicked inside of the board
-
         # Want to edit the global copies of these vars
         global highlight_params, box_selected, board
 
@@ -1546,13 +1544,20 @@ def onclick_board_handler(x, y):
 
             column = 0
     else:
-        # check whether they clicked on a button
+        # They didn't click on the board, check whether they clicked on a button
         for button in buttons:
             if button.check_clicked(x, y):
                 button.execute_function()
 
 
 def redeploy_pawn(column, row):
+    """
+    Redeploys the users given pawn to the row and column
+
+    :param column: **int** column to move the pawn to
+    :param row: **int** row to move the pawn to
+    :return:
+    """
     global highlight_params
 
     LAST_CLICK_COLUMN = 1
@@ -1572,9 +1577,9 @@ def process_turn(row, column, current_box):
     """
     Processes a given valid turn for the player and ai, also calls the AI to generate its move here
 
-    :param row: **int**
-    :param column:
-    :param current_box:
+    :param row: **int** Row the user wants the piece to move to
+    :param column: **int** Column the user wants the piece to move to
+    :param current_box: **list** Defines the [x, y] coords of the box
     :return:
     """
     # process turn
@@ -1609,7 +1614,7 @@ def process_turn(row, column, current_box):
     # The AI didn't find a move that it determined it would win from, we lower its depth level until one is found
     if generated_ai[1] == float("-infinity"):
         # it didn't find a move that seemed promising at this depth level, lets try to use lower depth levels
-        for depth in range(depth_amt-1, 1, -1):
+        for depth in range(depth_amt-1, 0, -1):
             print("Generating at a depth level of " + str(depth))
             generated_ai = AI_obj.findmove(depth)
 
@@ -1664,7 +1669,7 @@ def process_turn(row, column, current_box):
         reset_highlight_params()
 
     # check whether the AI deleted a piece when redeploying
-    if len(generated_ai[0][1]) > 0:
+    if ai_val is not False and len(generated_ai[0][1]) > 0:
         print(generated_ai[0][1])
         redeploy_location = generated_ai[0][1]
         delete_piece(redeploy_location[3], redeploy_location[2])

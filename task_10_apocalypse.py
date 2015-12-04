@@ -1631,12 +1631,10 @@ def process_turn(row, column, current_box):
             generated_ai[0] = False
 
     print(generated_ai)
+
     # Set the AI move to the actual move and not the score value
     ai_val = generated_ai[0]
     print("AI MOVE: " + str(ai_val))
-
-    print("\n\nAI Results:\nMove: " + str(ai_val))
-    print(generated_ai)
 
     if ai_val is not False:
         ai_val = ai_val[0]

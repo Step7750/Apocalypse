@@ -5,6 +5,7 @@ Play the game of Apocalypse! A simultaneous game based upon the principles of ch
 
 The rules can be found here: https://en.wikipedia.org/wiki/Apocalypse_(chess_variant)
 
+
 The program functions are neatly divided into different sections to define different areas of the program.
 There are classes for the board drawing, AI, and buttons
 
@@ -692,7 +693,9 @@ class AIMove:
         if prev_move != 0:
             board_copy = self.combine_single_move(board_copy, prev_move[0], prev_move[1], prev_move[2], prev_move[3])
 
-        if depth == 0 or self.ai_score(board_copy) == float("-infinity") or self.ai_score(board_copy) == float("infinity"):
+        current_score = self.ai_score(board_copy)
+        if depth == 0 or current_score == float("-infinity") or current_score == float("infinity") \
+                or current_score == 255:
             # this is a leaf node, return the score
             return self.ai_score(board_copy)
 
@@ -916,9 +919,9 @@ class AIMove:
         if len(self.possible_moves(board_state, 0)) == 0:
             return_val = float("-infinity")
         elif ai_pawns == 0 and player_pawns == 0:
-            # stalemate, return value of infinity
-            # this could cause some confusion for the bot to force a stalemate rather than win
-            return_val = float("infinity")
+            # stalemate, return a high value less than a win
+            # The number is not generally achievable with pawn wighting and thus works for terminal nodes
+            return_val = 255
         elif ai_pawns == 0:
             # the player won
             return_val = float("-infinity")
@@ -1029,6 +1032,7 @@ class AIMove:
 Board Drawing Related Functions
 
 """
+
 
 def create_default_turtle(colour="white"):
     """
@@ -1569,8 +1573,8 @@ def redeploy_pawn(column, row):
 
     reset_highlight_params()
     # rebind the saving and loading
-    screen.onkeyrelease(save_state, "s")
-    screen.onkeyrelease(load_state, "l")
+    DrawingBoard.screen.onkeyrelease(save_state, "s")
+    DrawingBoard.screen.onkeyrelease(load_state, "l")
 
 
 def process_turn(row, column, current_box):
@@ -1714,8 +1718,8 @@ def redeploy_player_pawn(current_box, row, column):
 
     print("Allowing them to redeploy pawn, disabling saving")
 
-    screen.onkeyrelease(None, "s")
-    screen.onkeyrelease(None, "l")
+    DrawingBoard.screen.onkeyrelease(None, "s")
+    DrawingBoard.screen.onkeyrelease(None, "l")
 
     highlight_params[REDEPLOYING_PAWN] = True
     highlight_params[LAST_CLICK_COLUMN] = column
@@ -1733,11 +1737,11 @@ def redeploy_player_pawn(current_box, row, column):
     new_redeploy_turtle.goto(current_box[0], current_box[1])
     new_redeploy_turtle.down()
     for i2 in range(4):
-        new_redeploy_turtle.forward(BOARD_DIMENSION/5)
+        new_redeploy_turtle.forward(DrawingBoard.BOARD_DIMENSION/5)
         new_redeploy_turtle.right(90)
     new_redeploy_turtle.up()
-    message_queue("Redeploy Pawn to")
-    message_queue("a Vacant Square")
+    DrawingBoard.message_queue("Redeploy Pawn to")
+    DrawingBoard.message_queue("a Vacant Square")
 
 
 def reset_highlight_params():

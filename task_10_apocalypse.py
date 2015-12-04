@@ -234,345 +234,373 @@ AI Functions
 """
 
 
-def ai_score(board_state):
-    """
-    Computes the score of the board for the AI using a weighted score heuristic
+class AI_Move:
+    def __init__(self, board_copy):
+        """
+        Sets initial parameters for the AI
 
-    :param board_state: **multi-dimensional list** defining the board state
-    :return: **numerical** returns score of the current board for the AI
-    """
-    # Calculate the current AI score and pawn amount
-    ai_score_val = 0
-    ai_pawns = 0
-    for row in range(5):
-        for column in range(5):
-            if board_state[row][column] == "K":
-                ai_score_val += KNIGHT_WEIGHTING
-            elif board_state[row][column] == "P":
-                ai_score_val += PAWN_WEIGHTING
-                ai_pawns += 1
+        :param board_copy: **multi-dimensional list** Board State
+        :return:
+        """
+        self.board = board_copy
 
-    # Calculate the current player score and pawn amount
-    player_score = 0
-    player_pawns = 0
-    for row in range(5):
-        for column in range(5):
-            if board_state[row][column] == "k":
-                player_score += KNIGHT_WEIGHTING
-            elif board_state[row][column] == "p":
-                player_score += PAWN_WEIGHTING
-                player_pawns += 1
+    def findmove(self, depth):
+        """
+        Starts the minimax recursion sequence with the given depth and board state
 
-    # Set value to store the return value
-    return_val = 0
+        :param depth: **int** Depth of moves to think ahead
+        :return: **multi-dimensional list** Defines the best possible move using minimax w/ alpha beta pruning
+        """
+        return self.minimax_alphabeta(self.board, depth, True, float("-infinity"), float("infinity"), 0, True)
 
-    # Calculate general score of the board for the AI
-    if len(possible_moves(board_state, 0)) == 0:
-        return_val = float("-infinity")
-    elif ai_pawns == 0 and player_pawns == 0:
-        # stalemate, return value of infinity
-        # this could cause some confusion for the bot to force a stalemate rather than win
-        return_val = float("infinity")
-    elif ai_pawns == 0:
-        # the player won
-        return_val = float("-infinity")
-    elif player_pawns == 0:
-        # the ai won
-        return_val = float("infinity")
-    else:
-        return_val = ai_score_val-player_score
+    def minimax_alphabeta(self, board_state, depth, MaxPlayer, alpha, beta, prev_move=0, top_tree=False):
+        """
+        Implements the Minimax algorithm with alpha beta pruning for calculating AI decisions
+        This function is recursively called and tries to mimic simultaneous movements
 
-    return return_val
+        :param board_state: **multi-dimensional list** Board state
+        :param depth: **int** Current depth of the recursive call
+        :param MaxPlayer: **bool** Defines whether to minimize or maximize in the current recursive call
+        :param alpha: **float** Current alpha value for pruning purposes
+        :param beta: **float** Current beta value for pruning purposes
+        :param prev_move: **multi-dimensional list** **optional** List defining the previous move (set if the last call was maximizing
+        :param top_tree: **bool** **optional** True if the current node is at the top of the tree
+        :return: If its the terminal node, returns the score of the node
+        """
+        board_copy = copy.deepcopy(board_state)
 
+        # This mimics simultaneous movements when checking a leaf node that doesn't involve the minimizing player
+        if prev_move != 0:
+            board_copy = self.combine_single_move(board_copy, prev_move[0], prev_move[1], prev_move[2], prev_move[3])
 
-def combine_moves(board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
-    """
-    Combines two move onto a given board state without any drawing functionality
-    Uses the rules of simultaneous movement in Apocalypse when combining the moves
+        if depth == 0 or self.ai_score(board_copy) == float("-infinity") or self.ai_score(board_copy) == float("infinity"):
+            # this is a leaf node, return the score
+            return self.ai_score(board_copy)
 
-    :param board_state_val: **multi-dimensional list** Board state
-    :param x: **int** current x coord of the first piece to move
-    :param y: **int** current y coord of the first piece to move
-    :param new_x: **int** new x coord of the first piece to move
-    :param new_y: **int** new y coord of the first piece to move
-    :param x2: **int** current x coord of the second piece to move
-    :param y2: **int** current y coord of the second piece to move
-    :param new_x2: **int** new y coord of the second piece to move
-    :param new_y2: **int** new y coord of the second piece to move
-    :return: **multi-dimensional list** Board state with the moves combined
+        # Revert any changes that were done to calculate the AI score
+        board_copy = copy.deepcopy(board_state)
 
-    """
-    # Create deep copy of the board to configure
-    board_state = copy.deepcopy(board_state_val)
+        if MaxPlayer:
+            best_val = float("-infinity")
 
-    # store the values of each moving board piece
-    player_val = board_state[x][y]
-    ai_val = board_state[x2][y2]
+            moves = self.possible_moves(board_copy, 0)
 
-    if new_x == new_x2 and new_y == new_y2:
+            # Heuristic: Sort moves by ones that kill pieces first to reduce alpha beta constraints faster
+            moves = sorted(moves, key=lambda x: x[1], reverse=True)
+            if top_tree:
+                best_move = []
+                old_piece = []
 
-        piece_type1 = board_state[x][y]
-        piece_type2 = board_state[x2][y2]
-        if piece_type1 == "p" and piece_type2 == "P":
-            # both pawns, delete both
+            for move in moves:
+                clean_move = move[0]
+                #print("Max Depth " + str(depth) + " Board: " + str(board_copy))
+                val = self.minimax_alphabeta(copy.deepcopy(board_copy), depth - 1, False, alpha, beta, clean_move)
+                #print("Score of " + str(val))
+                if val > best_val:
+                    best_move = clean_move
+                    if len(move) == 3:
+                        # this contains values about the piece that died in this process
+                        old_piece = move[2]
+
+                best_val = max(best_val, val)
+                alpha = max(best_val, alpha)
+
+                if beta <= alpha:
+                    # cut off
+                    break
+            # This might be the top of the tree, if so, return the best move along with the value
+            if top_tree:
+                return [[best_move, old_piece], best_val]
+            else:
+                return best_val
+        else:
+            # min player
+            best_val = float("infinity")
+            moves = self.possible_moves(board_copy, 1)
+
+            # Heuristic: Sort moves by ones that kill pieces first to reduce alpha beta constraints faster
+            moves = sorted(moves, key=lambda x: x[1], reverse=True)
+
+            for move in moves:
+                move = move[0]
+                move_board = copy.deepcopy(board_copy)
+
+                # The minimizing player always combines moves simultaneously
+                move_board = self.combine_moves(move_board, move[0], move[1], move[2], move[3], prev_move[0], prev_move[1], prev_move[2], prev_move[3])
+
+                val = self.minimax_alphabeta(move_board, depth - 1, True, alpha, beta)
+
+                best_val = min(best_val, val)
+                beta = min(best_val, beta)
+                if beta <= alpha:
+                    # cutoff
+                    break
+            return best_val
+
+    def possible_moves(self, board_state, player_type):
+        """
+        Generates possible moves for player_type on the given board_state
+
+        :param board_state: **multi-dimensional list** Represents the current board state
+        :param player_type: **int** 0 if AI, 1 if Player
+        :return: **multi-dimensional list** List that defines the possible moves that can be made by that player
+        """
+
+        # list to store the possible moves
+        possible_moves = []
+
+        knight_moves = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]
+        for x in range(5):
+            for y in range(5):
+                piece_type = board_state[x][y]
+                # check whether the AI owns this piece
+                if (piece_type == "K" and player_type == 0) or (piece_type == "k" and player_type == 1):
+
+                    for move in knight_moves:
+                        if 0 <= (x + move[0]) < 5 and 0 <= (y + move[1]) < 5:
+                            # it is inside the board
+                            if player_type == 0:
+                                if board_state[x+move[0]][y+move[1]] != "P" and board_state[x+move[0]][y+move[1]] != "K":
+                                    # valid AI move for the knight, return it
+                                    if board_state[x+move[0]][y+move[1]] == "W":
+                                        possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 0])
+                                    elif board_state[x+move[0]][y+move[1]] == "p":
+                                        # give more points if it kills a pawn
+                                        possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 2])
+                                    else:
+                                        possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 1])
+                            else:
+                                if board_state[x+move[0]][y+move[1]] != "p" and board_state[x+move[0]][y+move[1]] != "k":
+                                    # valid AI move for the knight, return it
+                                    if board_state[x+move[0]][y+move[1]] == "W":
+                                        possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 0])
+                                    elif board_state[x+move[0]][y+move[1]] == "P":
+                                        # give more points if it kills a pawn, that matters much much more
+                                        possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 2])
+                                    else:
+                                        possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 1])
+
+                elif (piece_type == "P" and player_type == 0) or (piece_type == "p" and player_type == 1):
+
+                    # offset of rows is down for the AI
+                    if piece_type == "P":
+                        offset_val = x + 1
+                    else:
+                        offset_val = x - 1
+
+                    # boolean defining whether the pawn is redeploying or not
+                    movement_upgrade = ((player_type == 0 and offset_val != 4) or (player_type == 1 and offset_val != 0)) or ((knight_amount(board_state, player_type) < 2) and ((player_type == 0 and offset_val == 4) or (player_type == 1 and offset_val == 0)))
+
+                    valid_move_val = False
+                    move_vals = []
+                    # check going diagonally right
+                    if 0 <= offset_val < 5 and 0 <= (y + 1) < 5:
+                        # it is within the constraints of the board, check whether there is an enemy there
+                        if player_type == 0:
+                            if board_state[offset_val][(y + 1)] == "k" or board_state[offset_val][(y + 1)] == "p":
+                                if movement_upgrade:
+                                    if board_state[offset_val][(y + 1)] == "p":
+                                        possible_moves.append([[x, y, offset_val, (y + 1)], 2])
+                                    else:
+                                        possible_moves.append([[x, y, offset_val, (y + 1)], 1])
+                                else:
+                                    valid_move_val = True
+                                    move_vals.append([x, y, offset_val, (y + 1)])
+                        else:
+                            if board_state[offset_val][(y + 1)] == "K" or board_state[offset_val][(y + 1)] == "P":
+                                if movement_upgrade:
+                                    if board_state[offset_val][(y + 1)] == "p":
+                                        possible_moves.append([[x, y, offset_val, (y + 1)], 2])
+                                    else:
+                                        possible_moves.append([[x, y, offset_val, (y + 1)], 1])
+                                else:
+                                    valid_move_val = True
+                                    move_vals.append([x, y, offset_val, (y + 1)])
+                    if 0 <= offset_val < 5 and 0 <= (y - 1) < 5:
+                        # it is within the constraints of the board, check whether there is an enemy there
+                        if player_type == 0:
+                            if board_state[offset_val][(y - 1)] == "k" or board_state[offset_val][(y - 1)] == "p":
+                                if movement_upgrade:
+                                    if board_state[offset_val][(y - 1)] == "p":
+                                        possible_moves.append([[x, y, offset_val, (y - 1)], 2])
+                                    else:
+                                        possible_moves.append([[x, y, offset_val, (y - 1)], 1])
+                                else:
+                                    valid_move_val = True
+                                    move_vals.append([x, y, offset_val, (y - 1)])
+                        else:
+                            if board_state[offset_val][(y - 1)] == "K" or board_state[offset_val][(y - 1)] == "P":
+                                if movement_upgrade:
+                                    if board_state[offset_val][(y - 1)] == "P":
+                                        possible_moves.append([[x, y, offset_val, (y - 1)], 2])
+                                    else:
+                                        possible_moves.append([[x, y, offset_val, (y - 1)], 1])
+                                else:
+                                    valid_move_val = True
+                                    move_vals.append([x, y, offset_val, (y - 1)])
+                    if 0 <= offset_val < 5:
+                        # check whether it is going forward
+                        # check whether forward is whitespace or not
+                        if board_state[offset_val][y] == "W":
+                            if movement_upgrade:
+                                possible_moves.append([[x, y, offset_val, y], 0])
+                            else:
+                                valid_move_val = True
+                                move_vals.append([x, y, offset_val, y])
+                    if not movement_upgrade and valid_move_val is True:
+                        # pawn reached last rank and they have 2 knights already
+                        # allow them to redeploy, generate possible moves
+                        for move_output in move_vals:
+                            for tempx in range(5):
+                                for tempy in range(5):
+                                    temp_piece_type = board_state[tempx][tempy]
+                                    if temp_piece_type == "W":
+                                        # this is a possibility
+                                        possible_moves.append([[x, y, tempx, tempy], 0, move_output])
+        return possible_moves
+
+    def ai_score(self, board_state):
+        """
+        Computes the score of the board for the AI using a weighted score heuristic
+
+        :param board_state: **multi-dimensional list** defining the board state
+        :return: **numerical** returns score of the current board for the AI
+        """
+        # Calculate the current AI score and pawn amount
+        ai_score_val = 0
+        ai_pawns = 0
+        for row in range(5):
+            for column in range(5):
+                if board_state[row][column] == "K":
+                    ai_score_val += KNIGHT_WEIGHTING
+                elif board_state[row][column] == "P":
+                    ai_score_val += PAWN_WEIGHTING
+                    ai_pawns += 1
+
+        # Calculate the current player score and pawn amount
+        player_score = 0
+        player_pawns = 0
+        for row in range(5):
+            for column in range(5):
+                if board_state[row][column] == "k":
+                    player_score += KNIGHT_WEIGHTING
+                elif board_state[row][column] == "p":
+                    player_score += PAWN_WEIGHTING
+                    player_pawns += 1
+
+        # Set value to store the return value
+        return_val = 0
+
+        # Calculate general score of the board for the AI
+        if len(self.possible_moves(board_state, 0)) == 0:
+            return_val = float("-infinity")
+        elif ai_pawns == 0 and player_pawns == 0:
+            # stalemate, return value of infinity
+            # this could cause some confusion for the bot to force a stalemate rather than win
+            return_val = float("infinity")
+        elif ai_pawns == 0:
+            # the player won
+            return_val = float("-infinity")
+        elif player_pawns == 0:
+            # the ai won
+            return_val = float("infinity")
+        else:
+            return_val = ai_score_val-player_score
+
+        return return_val
+
+    def combine_moves(self, board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
+        """
+        Combines two move onto a given board state without any drawing functionality
+        Uses the rules of simultaneous movement in Apocalypse when combining the moves
+
+        :param board_state_val: **multi-dimensional list** Board state
+        :param x: **int** current x coord of the first piece to move
+        :param y: **int** current y coord of the first piece to move
+        :param new_x: **int** new x coord of the first piece to move
+        :param new_y: **int** new y coord of the first piece to move
+        :param x2: **int** current x coord of the second piece to move
+        :param y2: **int** current y coord of the second piece to move
+        :param new_x2: **int** new y coord of the second piece to move
+        :param new_y2: **int** new y coord of the second piece to move
+        :return: **multi-dimensional list** Board state with the moves combined
+
+        """
+        # Create deep copy of the board to configure
+        board_state = copy.deepcopy(board_state_val)
+
+        # store the values of each moving board piece
+        player_val = board_state[x][y]
+        ai_val = board_state[x2][y2]
+
+        if new_x == new_x2 and new_y == new_y2:
+
+            piece_type1 = board_state[x][y]
+            piece_type2 = board_state[x2][y2]
+            if piece_type1 == "p" and piece_type2 == "P":
+                # both pawns, delete both
+                board_state[x][y] = "W"
+                board_state[x2][y2] = "W"
+            elif piece_type1 == "k" and piece_type2 == "K":
+                board_state[y][x] = "W"
+                board_state[x2][y2] = "W"
+            elif piece_type1 == "p" and piece_type2 == "K":
+
+                board_state[x][y] = "W"
+                # execute move for AI
+                board_state[new_x2][new_y2] = board_state[y2][x2]
+                board_state[x2][y2] = "W"
+            elif piece_type1 == "k" and piece_type2 == "P":
+                board_state[x2][y2] = "W"
+                # execute move for player
+                board_state[new_x][new_y] = board_state[y][x]
+                board_state[x][y] = "W"
+        else:
+            # the pieces are moving to different locations, simultaneous movement does not matter
+
+            board_state[new_x][new_y] = player_val
             board_state[x][y] = "W"
-            board_state[x2][y2] = "W"
-        elif piece_type1 == "k" and piece_type2 == "K":
-            board_state[y][x] = "W"
-            board_state[x2][y2] = "W"
-        elif piece_type1 == "p" and piece_type2 == "K":
 
-            board_state[x][y] = "W"
-            # execute move for AI
-            board_state[new_x2][new_y2] = board_state[y2][x2]
+            board_state[new_x2][new_y2] = ai_val
             board_state[x2][y2] = "W"
-        elif piece_type1 == "k" and piece_type2 == "P":
-            board_state[x2][y2] = "W"
-            # execute move for player
-            board_state[new_x][new_y] = board_state[y][x]
-            board_state[x][y] = "W"
-    else:
-        # the pieces are moving to different locations, simultaneous movement does not matter
+
+        # check whether an AI pawn reached the last rank
+        if ai_val == "P" and new_x2 == 4:
+            # reached last rank, process it
+            board_state[new_x2][new_y2] = "K"
+
+        # check whether a player pawn reached the last rank
+        if player_val == "p" and new_x == 0:
+            # reached last rank, process it
+            board_state[new_x][new_y] = "k"
+
+        return board_state
+
+    def combine_single_move(self, board_state_val, x, y, new_x, new_y):
+        """
+        Combines a single move onto a given board state without any drawing functionality
+        **Does not take simultaneous action into account**
+
+        :param board_state_val: **multi-dimensional list** Board state
+        :param x: **int** current x coord of the piece to move
+        :param y: **int** current y coord of the piece to move
+        :param new_x: **int** new x coord of the piece to move
+        :param new_y: **int** new y coord of the piece to move
+        :return: **multi-dimensional list** Board state with the move combined
+        """
+        board_state = copy.deepcopy(board_state_val)
+
+        player_val = copy.copy(board_state[x][y])
 
         board_state[new_x][new_y] = player_val
         board_state[x][y] = "W"
+        # check whether we need to upgrade pawns to knights
+        if new_x == 4 and player_val == "P":
+            board_state[new_x][new_y] = "K"
+        elif new_x == 0 and player_val == "p":
+            board_state[new_x][new_y] = "k"
 
-        board_state[new_x2][new_y2] = ai_val
-        board_state[x2][y2] = "W"
-
-    # check whether an AI pawn reached the last rank
-    if ai_val == "P" and new_x2 == 4:
-        # reached last rank, process it
-        board_state[new_x2][new_y2] = "K"
-
-    # check whether a player pawn reached the last rank
-    if player_val == "p" and new_x == 0:
-        # reached last rank, process it
-        board_state[new_x][new_y] = "k"
-
-    return board_state
-
-
-def combine_single_move(board_state_val, x, y, new_x, new_y):
-    """
-    Combines a single move onto a given board state without any drawing functionality
-    **Does not take simultaneous action into account**
-
-    :param board_state_val: **multi-dimensional list** Board state
-    :param x: **int** current x coord of the piece to move
-    :param y: **int** current y coord of the piece to move
-    :param new_x: **int** new x coord of the piece to move
-    :param new_y: **int** new y coord of the piece to move
-    :return: **multi-dimensional list** Board state with the move combined
-    """
-    board_state = copy.deepcopy(board_state_val)
-
-    player_val = copy.copy(board_state[x][y])
-
-    board_state[new_x][new_y] = player_val
-    board_state[x][y] = "W"
-    # check whether we need to upgrade pawns to knights
-    if new_x == 4 and player_val == "P":
-        board_state[new_x][new_y] = "K"
-    elif new_x == 0 and player_val == "p":
-        board_state[new_x][new_y] = "k"
-
-    return board_state
-
-
-def minimax_alphabeta(board_state, depth, MaxPlayer, alpha, beta, prev_move=0, top_tree=False):
-    """
-    Implements the Minimax algorithm with alpha beta pruning for calculating AI decisions
-    This function is recursively called and tries to mimic simultaneous movements
-
-    :param board_state: **multi-dimensional list** Board state
-    :param depth: **int** Current depth of the recursive call
-    :param MaxPlayer: **bool** Defines whether to minimize or maximize in the current recursive call
-    :param alpha: **float** Current alpha value for pruning purposes
-    :param beta: **float** Current beta value for pruning purposes
-    :param prev_move: **multi-dimensional list** **optional** List defining the previous move (set if the last call was maximizing
-    :param top_tree: **bool** **optional** True if the current node is at the top of the tree
-    :return: If its the terminal node, returns the score of the node
-    """
-    board_copy = copy.deepcopy(board_state)
-    if prev_move != 0:
-        board_copy = combine_single_move(board_copy, prev_move[0], prev_move[1], prev_move[2], prev_move[3])
-
-    if depth == 0 or ai_score(board_copy) == float("-infinity") or ai_score(board_copy) == float("infinity"):
-        #print("Leaf Node Board: Depth: " + str(depth) + str(board_copy))
-        return ai_score(board_copy)
-    board_copy = copy.deepcopy(board_state)
-    if MaxPlayer:
-        best_val = float("-infinity")
-        moves = possible_moves(board_copy, 0)
-        # sort moves by ones who kill pieces first
-        moves = sorted(moves, key=lambda x: x[1], reverse=True)
-        if top_tree:
-            best_move = []
-            old_piece = []
-
-        for move in moves:
-            clean_move = move[0]
-            #print("Max Depth " + str(depth) + " Board: " + str(board_copy))
-            val = minimax_alphabeta(copy.deepcopy(board_copy), depth - 1, False, alpha, beta, clean_move)
-            #print("Score of " + str(val))
-            if val > best_val:
-                best_move = clean_move
-                if len(move) == 3:
-                    # this contains values about the piece that died in this process
-                    old_piece = move[2]
-
-            best_val = max(best_val, val)
-            alpha = max(best_val, alpha)
-
-            if beta <= alpha:
-                break
-        if top_tree:
-            return [[best_move, old_piece], best_val]
-        else:
-            return best_val
-    else:
-        # min player
-        best_val = float("infinity")
-        moves = possible_moves(board_copy, 1)
-        # sort moves by ones who kill pieces first
-        moves = sorted(moves, key=lambda x: x[1], reverse=True)
-        for move in moves:
-            move = move[0]
-            move_board = copy.deepcopy(board_copy)
-            move_board = combine_moves(move_board, move[0], move[1], move[2], move[3], prev_move[0], prev_move[1], prev_move[2], prev_move[3])
-            val = minimax_alphabeta(move_board, depth - 1, True, alpha, beta)
-            #print("Min Depth " + str(depth) + " Board: " + str(move_board))
-            #print("Score of " + str(val))
-
-            best_val = min(best_val, val)
-            beta = min(best_val, beta)
-            if beta <= alpha:
-                break
-        return best_val
-
-
-def possible_moves(board_state, player_type):
-    """
-    Generates possible moves for player_type on the given board_state
-
-    :param board_state: **multi-dimensional list** Represents the current board state
-    :param player_type: **int** 0 if AI, 1 if Player
-    :return: **multi-dimensional list** List that defines the possible moves that can be made by that player
-    """
-
-    # list to store the possible moves
-    possible_moves = []
-
-    knight_moves = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]
-    for x in range(5):
-        for y in range(5):
-            piece_type = board_state[x][y]
-            # check whether the AI owns this piece
-            if (piece_type == "K" and player_type == 0) or (piece_type == "k" and player_type == 1):
-
-                for move in knight_moves:
-                    if 0 <= (x + move[0]) < 5 and 0 <= (y + move[1]) < 5:
-                        # it is inside the board
-                        if player_type == 0:
-                            if board_state[x+move[0]][y+move[1]] != "P" and board_state[x+move[0]][y+move[1]] != "K":
-                                # valid AI move for the knight, return it
-                                if board_state[x+move[0]][y+move[1]] == "W":
-                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 0])
-                                elif board_state[x+move[0]][y+move[1]] == "p":
-                                    # give more points if it kills a pawn
-                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 2])
-                                else:
-                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 1])
-                        else:
-                            if board_state[x+move[0]][y+move[1]] != "p" and board_state[x+move[0]][y+move[1]] != "k":
-                                # valid AI move for the knight, return it
-                                if board_state[x+move[0]][y+move[1]] == "W":
-                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 0])
-                                elif board_state[x+move[0]][y+move[1]] == "P":
-                                    # give more points if it kills a pawn, that matters much much more
-                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 2])
-                                else:
-                                    possible_moves.append([[x, y, (x+move[0]), (y+move[1])], 1])
-
-            elif (piece_type == "P" and player_type == 0) or (piece_type == "p" and player_type == 1):
-
-                # offset of rows is down for the AI
-                if piece_type == "P":
-                    offset_val = x + 1
-                else:
-                    offset_val = x - 1
-
-                # boolean defining whether the pawn is redeploying or not
-                movement_upgrade = ((player_type == 0 and offset_val != 4) or (player_type == 1 and offset_val != 0)) or ((knight_amount(board_state, player_type) < 2) and ((player_type == 0 and offset_val == 4) or (player_type == 1 and offset_val == 0)))
-
-                valid_move_val = False
-                move_vals = []
-                # check going diagonally right
-                if 0 <= offset_val < 5 and 0 <= (y + 1) < 5:
-                    # it is within the constraints of the board, check whether there is an enemy there
-                    if player_type == 0:
-                        if board_state[offset_val][(y + 1)] == "k" or board_state[offset_val][(y + 1)] == "p":
-                            if movement_upgrade:
-                                if board_state[offset_val][(y + 1)] == "p":
-                                    possible_moves.append([[x, y, offset_val, (y + 1)], 2])
-                                else:
-                                    possible_moves.append([[x, y, offset_val, (y + 1)], 1])
-                            else:
-                                valid_move_val = True
-                                move_vals.append([x, y, offset_val, (y + 1)])
-                    else:
-                        if board_state[offset_val][(y + 1)] == "K" or board_state[offset_val][(y + 1)] == "P":
-                            if movement_upgrade:
-                                if board_state[offset_val][(y + 1)] == "p":
-                                    possible_moves.append([[x, y, offset_val, (y + 1)], 2])
-                                else:
-                                    possible_moves.append([[x, y, offset_val, (y + 1)], 1])
-                            else:
-                                valid_move_val = True
-                                move_vals.append([x, y, offset_val, (y + 1)])
-                if 0 <= offset_val < 5 and 0 <= (y - 1) < 5:
-                    # it is within the constraints of the board, check whether there is an enemy there
-                    if player_type == 0:
-                        if board_state[offset_val][(y - 1)] == "k" or board_state[offset_val][(y - 1)] == "p":
-                            if movement_upgrade:
-                                if board_state[offset_val][(y - 1)] == "p":
-                                    possible_moves.append([[x, y, offset_val, (y - 1)], 2])
-                                else:
-                                    possible_moves.append([[x, y, offset_val, (y - 1)], 1])
-                            else:
-                                valid_move_val = True
-                                move_vals.append([x, y, offset_val, (y - 1)])
-                    else:
-                        if board_state[offset_val][(y - 1)] == "K" or board_state[offset_val][(y - 1)] == "P":
-                            if movement_upgrade:
-                                if board_state[offset_val][(y - 1)] == "P":
-                                    possible_moves.append([[x, y, offset_val, (y - 1)], 2])
-                                else:
-                                    possible_moves.append([[x, y, offset_val, (y - 1)], 1])
-                            else:
-                                valid_move_val = True
-                                move_vals.append([x, y, offset_val, (y - 1)])
-                if 0 <= offset_val < 5:
-                    # check whether it is going forward
-                    # check whether forward is whitespace or not
-                    if board_state[offset_val][y] == "W":
-                        if movement_upgrade:
-                            possible_moves.append([[x, y, offset_val, y], 0])
-                        else:
-                            valid_move_val = True
-                            move_vals.append([x, y, offset_val, y])
-                if not movement_upgrade and valid_move_val is True:
-                    # pawn reached last rank and they have 2 knights already
-                    # allow them to redeploy, generate possible moves
-                    for move_output in move_vals:
-                        for tempx in range(5):
-                            for tempy in range(5):
-                                temp_piece_type = board_state[tempx][tempy]
-                                if temp_piece_type == "W":
-                                    # this is a possibility
-                                    possible_moves.append([[x, y, tempx, tempy], 0, move_output])
-    return possible_moves
+        return board_state
 
 
 """
@@ -1493,24 +1521,26 @@ def process_turn(row, column, current_box):
     message_queue("Generating AI Move")
 
     print("GENERATING MINIMAX AI MOVE")
-    copy_of_board = copy.deepcopy(board)
 
-    # Generate the AI move using -inf to inf alpha beta constraints and tell it this is the root node
-    generated_ai = minimax_alphabeta(copy_of_board, depth_amt, True, float("-infinity"), float("infinity"), 0, True)
+    # Generate the AI move using the global depth level
+    AI_obj = AI_Move(board)
+    generated_ai = AI_obj.findmove(depth_amt)
 
-    # The AI didn't find a move that it determined it would win from, try to do any random move it can
+    # The AI didn't find a move that it determined it would win from, we lower its depth level until one is found
     if generated_ai[1] == float("-infinity"):
         # it didn't find a move that seemed promising at this depth level, lets try to use lower depth levels
         for depth in range(depth_amt-1, 1, -1):
             print("Generating at a depth level of " + str(depth))
-            copy_of_board = copy.deepcopy(board)
-            generated_ai = minimax_alphabeta(copy_of_board, depth, True, float("-infinity"), float("infinity"), 0, True)
+            generated_ai = AI_obj.findmove(depth)
+
             if generated_ai[1] != float("-infinity"):
+                # we found a move that could work, break out of the loop
                 break
         if generated_ai[1] == float("-infinity"):
             # just add a penalty point, we've found absolutely no valid moves, oh well :(
             # forcing a penalty
             generated_ai[0] = False
+
     print(generated_ai)
     # Set the AI move to the actual move and not the score value
     ai_val = generated_ai[0]

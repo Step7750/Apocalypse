@@ -704,10 +704,12 @@ class AIMove:
         current_score = self.ai_score(board_copy)
         if current_score == float("-infinity") or current_score == float("infinity") \
                 or current_score == 255 or depth == 0:
+            #print("Cut")
             # this is a leaf node, return the score
             return self.ai_score(board_copy)
         elif (MaxPlayer and len(self.possible_capture_moves(board_copy, 0)) == 0) or ((not MaxPlayer) and \
                 len(self.possible_capture_moves(board_copy, 1)) == 0):
+            #print("Amazing")
             # quiet node, return the score
             return self.ai_score(board_copy)
 
@@ -810,7 +812,17 @@ class AIMove:
             else:
                 #Try quiescence search
                 #print("Doing quiescence search")
-                return self.quiescence(board_state, 4, MaxPlayer, alpha, beta, prev_move)
+                #return self.ai_score(board_copy)
+                # Quiescence depth is dynamic
+                pieces = self.pieces_amt(board_copy)
+                if 6 < pieces <= 8:
+                    quiescence_depth = 3
+                elif pieces <= 6:
+                    quiescence_depth = 5
+                else:
+                    quiescence_depth = 2
+                #print(quiescence_depth)
+                return self.quiescence(board_state, quiescence_depth, MaxPlayer, alpha, beta, prev_move)
 
 
         # Revert any changes that were done to calculate the AI score
@@ -999,7 +1011,7 @@ class AIMove:
 
     def possible_capture_moves(self, board_state, player_type):
         """
-        Generates possible moves for player_type on the given board_state
+        Generates possible capture moves for player_type on the given board_state
 
         :param board_state: **multi-dimensional list** Represents the current board state
         :param player_type: **int** 0 if AI, 1 if Player
@@ -1109,6 +1121,13 @@ class AIMove:
                                         possible_moves.append([[x, y, tempx, tempy], 0, move_output])
         return possible_moves
 
+    def pieces_amt(self, board):
+        pieces = 0
+        for row in board:
+            for column in row:
+                if column != "W":
+                    pieces += 1
+        return pieces
 
     def ai_score(self, board_state):
         """

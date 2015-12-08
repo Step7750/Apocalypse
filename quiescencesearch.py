@@ -1328,11 +1328,11 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
         piece_type2 = get_piece(y2, x2)
         if piece_type1 == "p" and piece_type2 == "P":
             # both pawns, delete both
-            print("Both are pawns, detroying both")
+            print("Both are pawns, destroying both")
             delete_piece(x, y)
             delete_piece(x2, y2)
         elif piece_type1 == "k" and piece_type2 == "K":
-            print("Both are knights, detroying both")
+            print("Both are knights, destroying both")
             delete_piece(x, y)
             delete_piece(x2, y2)
         elif piece_type1 == "p" and piece_type2 == "K":

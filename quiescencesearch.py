@@ -29,16 +29,13 @@ http://stackoverflow.com/a/311634
 """
 
 import turtle
-import platform   # used to know what the general display scaling should be
+import platform   # For display scaling and system configuration
 import copy       # for deep copies (for the minimax ai)
 import os
 
-# libraries used for sounds for various platforms
+# libraries used for sounds in Windows
 if platform.system() == "Windows":
     import winsound
-elif platform.system() == "Linux":
-    from wave import open as waveOpen
-    from ossaudiodev import open as ossOpen
 
 
 # if one pawn left, value it much higher
@@ -108,16 +105,6 @@ class BoardDraw:
     # dictionary that converts location num to a symbol
     SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
 
-    # stores text height for the queue messages
-    TEXT_HEIGHT = int(BOARD_DIMENSION/7.5)
-
-    # stores text height for strings related to the penalty score board
-    PENALTY_TEXT_HEIGHT = int(BOARD_DIMENSION/50)
-
-    # creates the move offset that is needed to increment by everytime a new message is printed (creates extra var to save it)
-    moveOffset = BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.7) - (PENALTY_TEXT_HEIGHT * 1.5)
-    SAVED_OFFSET = moveOffset
-
     # define dynamic scaling variable that stores whether to scale by height or width
     scaling_value = screen.window_width()
 
@@ -141,6 +128,19 @@ class BoardDraw:
         if self.screen.window_width()/self.screen.window_height() > 1.20:
             # width of the board is equal to 95% of the screen height
             self.BOARD_DIMENSION = self.screen.window_height()*0.95
+            
+        if platform.system() == "Linux":
+            # stores text height for the queue messages
+            self.TEXT_HEIGHT = int(self.BOARD_DIMENSION/8.5)
+            # stores text height for strings related to the penalty score board
+            self.PENALTY_TEXT_HEIGHT = int(self.BOARD_DIMENSION/50)
+        else:
+            self.TEXT_HEIGHT = int(self.BOARD_DIMENSION/7.5)
+            self.PENALTY_TEXT_HEIGHT = int(self.BOARD_DIMENSION/45)
+            
+        # creates the move offset that is needed to increment by everytime a new message is printed (creates extra var to save it)
+        self.moveOffset = self.BOARD_DIMENSION/2 - (self.TEXT_HEIGHT/0.7) - (self.PENALTY_TEXT_HEIGHT * 1.5)
+        self.SAVED_OFFSET = self.moveOffset
 
     def draw_main_screen(self):
         """
@@ -288,12 +288,12 @@ class BoardDraw:
                 # mac osx and windows have different symbol designs, with diff height/width
                 # haven't tested on a Unix system other than Mac OSX, Linux may have a different character set
 
-                if platform.system() == "Windows":
+                if platform.system() == "Windows" or platform.system() == "Linux":
                     # adjust scaling of the y coord based upon the os
                     char_turtle.sety(main_board.ycor() - (self.BOARD_DIMENSION/4.10))
                     char_turtle.write(text_to_write, False, align="center", font=("Ariel", int(self.BOARD_DIMENSION/5.4)))
                 else:
-                    # haven't tested on a Unix system other than Mac OSX, Linux may have a different character set
+                    # Mac OSX Scaling
                     char_turtle.sety(main_board.ycor() - (self.BOARD_DIMENSION/5))
                     char_turtle.write(text_to_write, False, align="center", font=("Ariel", int(self.BOARD_DIMENSION/5)))
 
@@ -333,7 +333,7 @@ class BoardDraw:
         PenaltyTurtle.color("grey")
 
         # Font sizes differ on Windows and Unix Platforms, use different scaling for both to position the turtle
-        if platform.system() == "Windows":
+        if platform.system() == "Windows" or platform.system() == "Linux":
             PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (PENALTY_TEXT_HEIGHT/0.8))
         else:
             PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (PENALTY_TEXT_HEIGHT/1))
@@ -341,7 +341,7 @@ class BoardDraw:
         PenaltyTurtle.write("Penalty Points:", False, align="left", font=("Ariel", PENALTY_TEXT_HEIGHT))
 
         # Font sizes differ on Windows and Unix Platforms, use different scaling for both to position the turtle
-        if platform.system() == "Windows":
+        if platform.system() == "Windows" or platform.system() == "Linux":
             PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.8))
         else:
             PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (TEXT_HEIGHT/1))
@@ -418,7 +418,7 @@ class BoardDraw:
 
         # go to the position to write out the text and write it
         self.MessagesTurtle.goto(self.BOARD_DIMENSION/2 - self.screen.window_width() * 0.08, self.moveOffset)
-        self.MessagesTurtle.write(to_write, move=True, align="left", font=("Ariel", int(self.BOARD_DIMENSION/45)))
+        self.MessagesTurtle.write(to_write, move=True, align="left", font=("Ariel", self.PENALTY_TEXT_HEIGHT))
 
         # overwrite the moveOffset with the new location
         self.moveOffset = self.MessagesTurtle.ycor()
@@ -607,7 +607,7 @@ class Button:
         self.button_turtle.color("black")
 
         # Windows and Unix based systems have different font heights and scaling
-        if platform.system() == "Windows":
+        if platform.system() == "Windows" or platform.system() == "Linux":
             self.button_turtle.setpos(self.x, self.y - (self.font_size/1.4))
         else:
             self.button_turtle.setpos(self.x, self.y - (self.font_size/1.65))
@@ -1404,7 +1404,7 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
 
     # write out the piece symbol centered in the block in ariel font with a size of the block height/width
 
-    if platform.system() == "Windows":
+    if platform.system() == "Windows" or platform.system() == "Linux":
         # adjust scaling of the y coord based upon the os
         new_turtle.write(symbol, False, align="center", font=("Ariel", int(DrawingBoard.BOARD_DIMENSION/5.5)))
     else:
@@ -2083,32 +2083,15 @@ def main_menu():
 
 def play_sound(sound_file):
     """
-    Plays a given sound on most platforms
+    Plays a given sound on Windows and Mac OSX
 
     :param sound_file: **string** name of the sound to play
     :return:
     """
-    # Since we can't use external libraries, this solution works: http://stackoverflow.com/a/311634
     if platform.system() == "Windows":
         winsound.PlaySound(sound_file, winsound.SND_FILENAME)
     elif platform.system() == "Darwin":
         os.system("afplay " + sound_file + "&")
-    elif platform.system() == "Linux":
-        s = waveOpen(sound_file,'rb')
-        (nc,sw,fr,nf,comptype, compname) = s.getparams( )
-        dsp = ossOpen('/dev/dsp','w')
-        try:
-            from ossaudiodev import AFMT_S16_NE
-        except ImportError:
-            if byteorder == "little":
-                AFMT_S16_NE = ossaudiodev.AFMT_S16_LE
-            else:
-                AFMT_S16_NE = ossaudiodev.AFMT_S16_BE
-        dsp.setparameters(AFMT_S16_NE, nc, fr)
-        data = s.readframes(nf)
-        s.close()
-        dsp.write(data)
-        dsp.close()
     else:
         print("Sounds not supported")
 

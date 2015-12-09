@@ -14,7 +14,7 @@ Created by: Stepan Fedorko-Bartos, Khesualdo Condori Barykin, Cameron Davies, Mi
 
 Features:
 - Fully interactive GUI to play Apocalypse
-- GUI Scales on any resolution
+- GUI that scales on any resolution
 - Dark Theme Interface
 - Main Menu Screen
 - Saving and Loading game states
@@ -23,7 +23,7 @@ Features:
 
 
 AI:
-- Advanced MiniMax AI w/ Alpha Beta Pruning (that handles the simultaneous nature of Apocalypse)
+- Advanced MiniMax AI w/ Fail Soft Alpha Beta Pruning (that handles the simultaneous nature of Apocalypse)
 - Uses Recursion for the MiniMax AI
 - Variable levels of AI difficulty (Can you beat it on hard?)
 - Uses the "Killer Heuristic" to store moves that cause a beta cutoff and order them first when sorting
@@ -31,7 +31,15 @@ AI:
 - Uses Quiescence search on truncated terminal nodes to increase the overall evaluation of the AI and
   reduce the "Horizon Effect"
 
+Sound Resources:
+- In order to hear sounds, you must have mouseDeselect.wav in the same directory as this file
+
+
 General Chess Documentation on the heuristics used: https://chessprogramming.wikispaces.com
+Killer Heuristic: http://chessprogramming.wikispaces.com/Killer+Heuristic
+Quiescence Search: https://chessprogramming.wikispaces.com/Quiescence+Search
+MVV-LAA Ordering: https://chessprogramming.wikispaces.com/MVV-LVA
+
 
 Easy - 1ply
 Medium - 4ply
@@ -41,7 +49,7 @@ All difficulty levels implement quiescence search to a variable depth, the kille
 for the minimax AI
 
 
-For sounds, since we can't use external libraries, we've decided to support Windows and Mac OSX using this solution:
+For sounds, since we can't use external libraries, we've decided to support Windows and Mac OSX using system sounds
 """
 
 import turtle
@@ -799,10 +807,6 @@ class AIMove:
             # Heuristic: Sort moves by ones that kill pieces first
             moves = sorted(moves, key=lambda x: x[1], reverse=True)
 
-            if top_tree:
-                best_move = []
-                old_piece = []
-
             for move in moves:
                 clean_move = move[0]
                 val = self.quiescence(board_copy, depth - 1, False, alpha, beta, clean_move, False, move[1])
@@ -919,6 +923,7 @@ class AIMove:
             # Heuristic: Sort moves by ones that kill pieces first to reduce alpha beta constraints faster
             moves = sorted(moves, key=lambda x: x[1], reverse=True)
 
+            # We want to store the best moves if this is the root of the tree
             if top_tree:
                 best_move = []
                 old_piece = []
@@ -1034,7 +1039,10 @@ class AIMove:
                         offset_val = x - 1
 
                     # boolean defining whether the pawn is redeploying or not
-                    movement_upgrade = ((player_type == 0 and offset_val != 4) or (player_type == 1 and offset_val != 0)) or ((knight_amount(board_state, player_type) < 2) and ((player_type == 0 and offset_val == 4) or (player_type == 1 and offset_val == 0)))
+                    movement_upgrade = ((player_type == 0 and offset_val != 4) or (player_type == 1 and offset_val != 0)) \
+                                       or ((knight_amount(board_state, player_type) < 2)
+                                           and ((player_type == 0 and offset_val == 4)
+                                                or (player_type == 1 and offset_val == 0)))
 
                     valid_move_val = False
                     move_vals = []
@@ -1155,7 +1163,10 @@ class AIMove:
                         offset_val = x - 1
 
                     # boolean defining whether the pawn is redeploying or not
-                    movement_upgrade = ((player_type == 0 and offset_val != 4) or (player_type == 1 and offset_val != 0)) or ((knight_amount(board_state, player_type) < 2) and ((player_type == 0 and offset_val == 4) or (player_type == 1 and offset_val == 0)))
+                    movement_upgrade = ((player_type == 0 and offset_val != 4) or (player_type == 1 and offset_val != 0)) \
+                                       or ((knight_amount(board_state, player_type) < 2)
+                                           and ((player_type == 0 and offset_val == 4)
+                                                or (player_type == 1 and offset_val == 0)))
 
                     valid_move_val = False
                     move_vals = []
@@ -1879,7 +1890,8 @@ def onclick_board_handler(x, y):
             for current_box in current_row:
                 column += 1
 
-                if (current_box[X_COORD] + BOX_WIDTH) > x > current_box[X_COORD] and current_box[Y_COORD] > y > (current_box[Y_COORD] - BOX_WIDTH):
+                if (current_box[X_COORD] + BOX_WIDTH) > x > current_box[X_COORD] \
+                        and current_box[Y_COORD] > y > (current_box[Y_COORD] - BOX_WIDTH):
                     # They clicked in this box
                     if column != highlight_params[LAST_CLICK_COLUMN] or row != highlight_params[LAST_CLICK_ROW]:
                         # They clicked on a different square than last time
@@ -1898,7 +1910,8 @@ def onclick_board_handler(x, y):
                         elif highlight_params[REDEPLOYING_PAWN] is True and get_piece(row - 1, column - 1) == "W":
                             print("The user wants to redeploy the pawn, making the move")
                             redeploy_pawn(column, row)
-                        elif (get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p") and highlight_params[REDEPLOYING_PAWN] is False:
+                        elif (get_piece(row - 1, column - 1) == "k" or get_piece(row - 1, column - 1) == "p") \
+                                and highlight_params[REDEPLOYING_PAWN] is False:
                             # only let the user select tiles it owns
                             play_sound("mouseDeselect.wav")
                             DrawingBoard.select_tile(New_Highlight_Turtle, current_box, column, row)
@@ -1932,7 +1945,8 @@ def redeploy_pawn(column, row):
     LAST_CLICK_ROW = 2
     REDEPLOY_TURTLE = 4
 
-    execute_move((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), "♙", "p", True)
+    execute_move((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1),
+                 (column - 1), (row - 1), "♙", "p", True)
     highlight_params[REDEPLOY_TURTLE].clear()
 
     reset_highlight_params()
@@ -1993,6 +2007,7 @@ def process_turn(row, column, current_box):
     ai_val = generated_ai[0]
     print("AI MOVE: " + str(ai_val))
 
+    # If the move isn't false, extract the actual move offsets from it
     if ai_val is not False:
         ai_val = ai_val[0]
         ai_type_val = get_piece(ai_val[0], ai_val[1])
@@ -2002,7 +2017,9 @@ def process_turn(row, column, current_box):
     print("DONE GENERATING MINIMAX AI MOVE")
 
     # Values are minus 1 since the board is from 0-4, not 1-5
-    player_validity = valid_move((highlight_params[LAST_CLICK_ROW] - 1), (highlight_params[LAST_CLICK_COLUMN] - 1), (row - 1), (column - 1), "p")
+    # Determine whether the player move is valid
+    player_validity = valid_move((highlight_params[LAST_CLICK_ROW] - 1), (highlight_params[LAST_CLICK_COLUMN] - 1),
+                                 (row - 1), (column - 1), "p")
     player_type_val = get_piece((highlight_params[LAST_CLICK_ROW] - 1), (highlight_params[LAST_CLICK_COLUMN] - 1))
 
     # check whether to upgrade the pawn to knight for the AI
@@ -2022,7 +2039,8 @@ def process_turn(row, column, current_box):
             redeploy_player_pawn(current_box, row, column)
         else:
             print("Changing piece to a knight")
-            execute_move((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), column - 1, row - 1, "♘", "k", False)
+            execute_move((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1),
+                         column - 1, row - 1, "♘", "k", False)
             reset_highlight_params()
     else:
         reset_highlight_params()
@@ -2122,6 +2140,7 @@ def redeploy_player_pawn(current_box, row, column):
         new_redeploy_turtle.right(90)
     new_redeploy_turtle.up()
 
+    # Give the user an indication in the messages
     DrawingBoard.message_queue("Redeploy Pawn to")
     DrawingBoard.message_queue("a Vacant Square")
 
@@ -2214,8 +2233,13 @@ def main_menu():
             |_|                    |__/|_|
         """)
     global DrawingBoard
+
+    # Create the board drawing object
     DrawingBoard = BoardDraw()
+
+    # Draw the main screen
     DrawingBoard.draw_main_screen()
+
     turtle.done()
 
 

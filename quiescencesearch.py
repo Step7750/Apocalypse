@@ -1415,10 +1415,14 @@ def move_logic(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
         if x != -1:
             player_piece = DrawingBoard.SYMBOL_DICT[get_piece(y, x)]
             player_code = get_piece(y, x)
-            execute_move(x, y, new_x, new_y, player_piece, player_code)
         if x2 != -1:
             ai_piece = DrawingBoard.SYMBOL_DICT[get_piece(y2, x2)]
             ai_code = get_piece(y2, x2)
+
+        # Execute the moves
+        if x != -1:
+            execute_move(x, y, new_x, new_y, player_piece, player_code)
+        if x2 != -1:
             execute_move(x2, y2, new_x2, new_y2, ai_piece, ai_code)
 
 

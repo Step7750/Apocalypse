@@ -11,21 +11,37 @@ There are classes for the board drawing, AI, and buttons
 
 Created by: Stepan Fedorko-Bartos, Khesualdo Condori Barykin, Cameron Davies, Michael Shi
 
+
 Features:
 - Fully interactive GUI to play Apocalypse
+- GUI Scales on any resolution
 - Dark Theme Interface
 - Main Menu Screen
 - Saving and Loading game states
-- Variable levels of AI difficulty (Can you beat it on hard?)
+- Sounds that work on most platforms (Windows, Mac OSX)
+- Classes to simplify code structure for the AI, board drawing, and buttons
+
+
+AI:
 - Advanced MiniMax AI w/ Alpha Beta Pruning (that handles the simultaneous nature of Apocalypse)
 - Uses Recursion for the MiniMax AI
-- Uses sorting heuristics to speed up the alpha beta constraints and AI move generation
-- Sounds that work on most platforms (Windows, Linux, Mac OSX)
-- Classes for the buttons and AI to simplify code structure
+- Variable levels of AI difficulty (Can you beat it on hard?)
+- Uses the "Killer Heuristic" to store moves that cause a beta cutoff and order them first when sorting
+- Uses MVV ordering to speed up the AI and reduce the branching factor
+- Uses Quiescence search on truncated terminal nodes to increase the overall evaluation of the AI and
+  reduce the "Horizon Effect"
 
-For sounds, since we can't use external libraries, we used this solution for Linux and Windows:
-http://stackoverflow.com/a/311634
+General Chess Documentation on the heuristics used: https://chessprogramming.wikispaces.com
 
+Easy - 1ply
+Medium - 4ply
+Hard - 6ply
+
+All difficulty levels implement quiescence search to a variable depth, the killer heuristic, and alpha beta pruning
+for the minimax AI
+
+
+For sounds, since we can't use external libraries, we've decided to support Windows and Mac OSX using this solution:
 """
 
 import turtle
@@ -36,10 +52,6 @@ import os
 # libraries used for sounds in Windows
 if platform.system() == "Windows":
     import winsound
-
-
-# if one pawn left, value it much higher
-# algorithm that values the pieces dynamically
 
 # declare all of the global variables
 
@@ -52,11 +64,11 @@ board = [["K", "P", "P", "P", "K"],
 # penalty points for each player (player, ai)
 penalty_points = [0, 0]
 
-# default amount of moves the AI thinks forward (computation gets exponential).
-# Anything over 7 will take a very long time....
+# default amount of moves the AI thinks forward (computation gets exponential)
+# This changes based upon the difficulty selected
 depth_amt = 6
 
-# store the state of the highlighting of boxes
+# store the state of the highlighting of boxes (and their corresponding turtles)
 highlight_params = [0, 0, 0, False, 0]
 box_selected = 0
 
@@ -76,9 +88,10 @@ Board Drawing Class
 
 class BoardDraw:
     """
-
     This class contains the necessary variables and functions for drawing things onto the screen
 
+    When setting elements height, width, and position, many relative "scaling" values are used depending upon
+    the OS configuration
     """
 
     # X, Y coords for each board box (to make our lives easier for onclick events)
@@ -87,7 +100,6 @@ class BoardDraw:
                      [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
                      [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
                      [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]]
-
 
     # store individual turtle objects for each position on the board (makes editing easier)
     board_turtles = [[0, 0, 0, 0, 0],
@@ -101,23 +113,35 @@ class BoardDraw:
     # for proper scaling with many dimensions, if the width is substantially more, go by the height of the screen
     BOARD_DIMENSION = screen.window_width()*0.75
 
-
     # dictionary that converts location num to a symbol
     SYMBOL_DICT = {"K": "♞", "P": "♟", "k": "♘", "p": "♙", "W": ""}
 
     # define dynamic scaling variable that stores whether to scale by height or width
     scaling_value = screen.window_width()
 
+    # Colours for the GUI
+    GREY = "#5E5E5E"
+    DARK_GREY = "#4A4A4A"
+
     def __init__(self):
+        """
+        Creates the object and sets the corresponding turtle, screen and scaling values
+
+        :return:
+        """
         # Initiate the screen with bgcolor
-        self.screen.bgcolor("#4A4A4A")
+        self.screen.bgcolor(self.DARK_GREY)
         self.screen.title("Apocalypse")
 
 
         # Initialize Turtles for the right message queue and penalties
         self.PenaltyTurtle = turtle.Turtle()
+        self.PenaltyTurtle._tracer(False)
         self.PenaltyTurtle.hideturtle()
+        self.PenaltyTurtle.color("grey")
+
         self.MessagesTurtle = turtle.Turtle()
+        self.MessagesTurtle._tracer(False)
         self.MessagesTurtle.hideturtle()
 
         # for proper scaling for relative values, if the height is less than the width, go based off of that
@@ -128,7 +152,8 @@ class BoardDraw:
         if self.screen.window_width()/self.screen.window_height() > 1.20:
             # width of the board is equal to 95% of the screen height
             self.BOARD_DIMENSION = self.screen.window_height()*0.95
-            
+
+        # set the text height scalings based upon OS
         if platform.system() == "Linux":
             # stores text height for the queue messages
             self.TEXT_HEIGHT = int(self.BOARD_DIMENSION/8.5)
@@ -138,7 +163,8 @@ class BoardDraw:
             self.TEXT_HEIGHT = int(self.BOARD_DIMENSION/7.5)
             self.PENALTY_TEXT_HEIGHT = int(self.BOARD_DIMENSION/45)
             
-        # creates the move offset that is needed to increment by everytime a new message is printed (creates extra var to save it)
+        # creates the move offset that is needed to increment by everytime a new message is printed
+        # (creates extra var to save it)
         self.moveOffset = self.BOARD_DIMENSION/2 - (self.TEXT_HEIGHT/0.7) - (self.PENALTY_TEXT_HEIGHT * 1.5)
         self.SAVED_OFFSET = self.moveOffset
 
@@ -152,7 +178,7 @@ class BoardDraw:
         self.screen.clear()
         self.screen.onclick(None)
         self.screen.onclick(button_event)
-        self.screen.bgcolor("#4A4A4A")
+        self.screen.bgcolor(self.DARK_GREY)
         self.screen.title("Apocalypse")
 
         # draw the checkered background
@@ -161,6 +187,7 @@ class BoardDraw:
         # Initialize a turtle to draw the main screen text
         main_menu_turtle = create_default_turtle()
 
+        # Draw the "Apocalypse" text and the little pieces according to scaling values of the board size
         main_menu_turtle.sety(self.screen.window_height()/5)
         main_menu_turtle.write("Apocalypse", True, align="center", font=("Ariel", int(self.scaling_value/8)))
         main_menu_turtle.home()
@@ -168,7 +195,8 @@ class BoardDraw:
         main_menu_turtle.setposition((self.screen.window_width() / 2), -((self.screen.window_height() / 2) - 10))
 
         # Create the main screen buttons
-        Button(0, -(self.screen.window_height()/20), "New Game", 'DrawingBoard.choose_difficulty()', self.screen.window_width()/3)
+        Button(0, -(self.screen.window_height()/20), "New Game", 'DrawingBoard.choose_difficulty()',
+               self.screen.window_width()/3)
         Button(0, -(self.screen.window_height()/7), "Load Game", 'load_state()', self.screen.window_width()/3)
 
     def draw_main_bg(self):
@@ -179,9 +207,9 @@ class BoardDraw:
         """
 
         # create the turtle that draws the checkerboard bg pattern and configure its settings
-        bg_turtle = create_default_turtle("#5E5E5E")
+        bg_turtle = create_default_turtle(self.GREY)
 
-        # define the size of each box
+        # define the size of each box, it won't necessarily be a square
         box_height = self.screen.window_height() / 5
         box_width = self.screen.window_width() / 5
 
@@ -192,9 +220,8 @@ class BoardDraw:
         for row in range(0, 5):
             for column in range(0, 5):
                 if row % 2 == 0:
-                    # even case
                     if column % 2 != 0:
-                        # print out a block
+                        # fill the block
                         bg_turtle.begin_fill()
                         for i in range(4):
                             if i % 2 == 0:
@@ -205,6 +232,7 @@ class BoardDraw:
                         bg_turtle.end_fill()
                 else:
                     if column % 2 == 0:
+                        # fill the block
                         bg_turtle.begin_fill()
                         for i in range(4):
                             if i % 2 == 0:
@@ -214,6 +242,7 @@ class BoardDraw:
                             bg_turtle.right(90)
                         bg_turtle.end_fill()
                 bg_turtle.setx(bg_turtle.xcor() + box_width)
+
             # reset position each time a row is done
             bg_turtle.setpos(-(self.screen.window_width()/2), (bg_turtle.ycor() - box_height))
 
@@ -228,22 +257,22 @@ class BoardDraw:
         X_COR = 0
         Y_COR = 1
 
+        # reset the move offset based upon relative values
         self.moveOffset = self.BOARD_DIMENSION/2 - (self.TEXT_HEIGHT/0.7) - (self.PENALTY_TEXT_HEIGHT * 1.5)
         self.SAVED_OFFSET = self.moveOffset
 
         # Initiate turtle that will draw the board
-        main_board = create_default_turtle("#5E5E5E")
+        main_board = create_default_turtle(self.GREY)
 
         # Make the board 80% width and 10% to the left
         main_board.goto(-(self.BOARD_DIMENSION/2) - (self.screen.window_width()*0.1), self.BOARD_DIMENSION/2)
 
-        # create outer rectangle
+        # create outer rectangle of the board
         main_board.down()
-        main_board.pendown()
         for i in range(4):
             main_board.forward(self.BOARD_DIMENSION)
             main_board.right(90)
-        main_board.penup()
+        main_board.up()
 
         # move turtle back to top left of the board
         main_board.goto(-(self.BOARD_DIMENSION/2) - (self.screen.window_width()*0.1), self.BOARD_DIMENSION/2)
@@ -291,11 +320,13 @@ class BoardDraw:
                 if platform.system() == "Windows" or platform.system() == "Linux":
                     # adjust scaling of the y coord based upon the os
                     char_turtle.sety(main_board.ycor() - (self.BOARD_DIMENSION/4.10))
-                    char_turtle.write(text_to_write, False, align="center", font=("Ariel", int(self.BOARD_DIMENSION/5.4)))
+                    char_turtle.write(text_to_write, False, align="center", font=("Ariel",
+                                                                                  int(self.BOARD_DIMENSION/5.4)))
                 else:
                     # Mac OSX Scaling
                     char_turtle.sety(main_board.ycor() - (self.BOARD_DIMENSION/5))
-                    char_turtle.write(text_to_write, False, align="center", font=("Ariel", int(self.BOARD_DIMENSION/5)))
+                    char_turtle.write(text_to_write, False, align="center", font=("Ariel",
+                                                                                  int(self.BOARD_DIMENSION/5)))
 
                 # add turtle to the board so that the memory location is stored
                 self.board_turtles[row][column] = char_turtle
@@ -304,7 +335,8 @@ class BoardDraw:
                 main_board.setx(main_board.xcor() + (self.BOARD_DIMENSION/5))
 
             # reset x position each time a row is done (to the very left), move the turtle down one block
-            main_board.setpos(-(self.BOARD_DIMENSION/2) - (self.screen.window_width()*0.1), (main_board.ycor() - (self.BOARD_DIMENSION/5)))
+            main_board.setpos(-(self.BOARD_DIMENSION/2) - (self.screen.window_width()*0.1), (main_board.ycor() -
+                                                                                             (self.BOARD_DIMENSION/5)))
 
         # create buttons on the main board to perform various actions, the offsets were calculated by eye and are relative
         Button(self.BOARD_DIMENSION/2 + (self.BOARD_DIMENSION/2 * 0.03), -self.BOARD_DIMENSION/2.13, "Load Game",
@@ -320,36 +352,36 @@ class BoardDraw:
 
         :return:
         """
-        # height of the text
+
+        # Simplify variable references
         PenaltyTurtle = self.PenaltyTurtle
         PENALTY_TEXT_HEIGHT = self.PENALTY_TEXT_HEIGHT
         BOARD_DIMENSION = self.BOARD_DIMENSION
         TEXT_HEIGHT = self.TEXT_HEIGHT
         screen = self.screen
+        AI = 1
+        PLAYER = 0
 
         PenaltyTurtle.up()
         PenaltyTurtle.clear()
 
-        PenaltyTurtle.color("grey")
-
         # Font sizes differ on Windows and Unix Platforms, use different scaling for both to position the turtle
+        text_height_modifier = 1
         if platform.system() == "Windows" or platform.system() == "Linux":
-            PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (PENALTY_TEXT_HEIGHT/0.8))
-        else:
-            PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (PENALTY_TEXT_HEIGHT/1))
+            text_height_modifier = 0.8
+
+        # Set the position on the right edge of the board
+        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 -
+                             (PENALTY_TEXT_HEIGHT/text_height_modifier))
 
         PenaltyTurtle.write("Penalty Points:", False, align="left", font=("Ariel", PENALTY_TEXT_HEIGHT))
 
-        # Font sizes differ on Windows and Unix Platforms, use different scaling for both to position the turtle
-        if platform.system() == "Windows" or platform.system() == "Linux":
-            PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (TEXT_HEIGHT/0.8))
-        else:
-            PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 - (TEXT_HEIGHT/1))
+        # reset the position
+        PenaltyTurtle.setpos(BOARD_DIMENSION/2 - screen.window_width() * 0.08, BOARD_DIMENSION/2 -
+                             (TEXT_HEIGHT/text_height_modifier))
 
         PenaltyTurtle.sety(PenaltyTurtle.ycor() - (PENALTY_TEXT_HEIGHT * 1.5))
 
-        PenaltyTurtle.color("grey")
-        PenaltyTurtle._tracer(False)
 
         # save coords to write out the numbers along with centered strings that define AI or Player
         # write out the player penalty amount and string
@@ -357,7 +389,7 @@ class BoardDraw:
         PenaltyTurtle.setx(BOARD_DIMENSION/2 - screen.window_width() * 0.08)
         text_width = PenaltyTurtle.xcor()
 
-        PenaltyTurtle.write(penalty_points[0], move=True, align="left", font=("Ariel", TEXT_HEIGHT))
+        PenaltyTurtle.write(penalty_points[PLAYER], move=True, align="left", font=("Ariel", TEXT_HEIGHT))
 
         # Set the coords of the turtle to write the centered "Player" text below the penalty score
         text_width = PenaltyTurtle.xcor() - text_width
@@ -374,7 +406,7 @@ class BoardDraw:
         PenaltyTurtle.setx(PenaltyTurtle.xcor() + screen.window_width() * 0.03)
         text_width = PenaltyTurtle.xcor()
 
-        PenaltyTurtle.write(penalty_points[1], move=True, align="left", font=("Ariel", TEXT_HEIGHT))
+        PenaltyTurtle.write(penalty_points[AI], move=True, align="left", font=("Ariel", TEXT_HEIGHT))
 
         # Set the coords of the turtle to write the centered "AI" text below the penalty score
         text_width = PenaltyTurtle.xcor() - text_width
@@ -438,7 +470,7 @@ class BoardDraw:
 
         self.screen.onclick(button_event)
 
-        self.screen.bgcolor("#4A4A4A")
+        self.screen.bgcolor(self.DARK_GREY)
 
         if winner == 1:
             text_write = "AI Won!"
@@ -454,7 +486,8 @@ class BoardDraw:
         end_screen_turtle.write(text_write, move=False, align="center", font=("Arial", int(self.BOARD_DIMENSION/8)))
 
         # draw out the main menu button
-        Button(0, -(self.screen.window_height()/20), "Main Menu", 'DrawingBoard.draw_main_screen()', self.scaling_value/3)
+        Button(0, -(self.screen.window_height()/20), "Main Menu", 'DrawingBoard.draw_main_screen()',
+               self.scaling_value/3)
 
     def choose_difficulty(self):
         """
@@ -466,16 +499,22 @@ class BoardDraw:
 
         self.screen.clear()
         self.screen.onclick(button_event)
-        self.screen.bgcolor("#4A4A4A")
+        self.screen.bgcolor(self.DARK_GREY)
 
         # setup the turtle
         difficulty_turtle = create_default_turtle()
 
+        # Center the turtle x and offset it a bit up
         difficulty_turtle.setpos(0, self.screen.window_height()/20)
         difficulty_turtle.write("Difficulty", True, align="center", font=("Ariel", int(self.screen.window_width()/12)))
-        Button(0, -(self.screen.window_height()/20), "Easy", 'modify_difficulty(1); DrawingBoard.new_game()', self.screen.window_width()/3)
-        Button(0, -(self.screen.window_height()/7), "Medium", 'modify_difficulty(4); DrawingBoard.new_game()', self.screen.window_width()/3)
-        Button(0, -(self.screen.window_height()/4.2), "Hard", 'modify_difficulty(6); DrawingBoard.new_game()', self.screen.window_width()/3)
+
+        # Create the difficulty buttons
+        Button(0, -(self.screen.window_height()/20), "Easy", 'modify_difficulty(1); DrawingBoard.new_game()',
+               self.screen.window_width()/3)
+        Button(0, -(self.screen.window_height()/7), "Medium", 'modify_difficulty(4); DrawingBoard.new_game()',
+               self.screen.window_width()/3)
+        Button(0, -(self.screen.window_height()/4.2), "Hard", 'modify_difficulty(6); DrawingBoard.new_game()',
+               self.screen.window_width()/3)
 
     def new_game(self):
         """
@@ -485,7 +524,7 @@ class BoardDraw:
         """
         delete_buttons()
         self.screen.clear()
-        self.screen.bgcolor("#4A4A4A")
+        self.screen.bgcolor(self.DARK_GREY)
 
         # reset the game state and draw it out
         reset_game_state()
@@ -500,6 +539,15 @@ class BoardDraw:
         self.screen.listen()
 
     def select_tile(self, New_Highlight_Turtle, current_box, column, row):
+        """
+        Draws the blue selection box around a given box and does the corresponding board logic
+
+        :param New_Highlight_Turtle: **Turtle Object** Turtle to draw the blue square with
+        :param current_box: **list** List containing the x, y of the top left of the wanted box
+        :param column: **int** Column of the box
+        :param row: **int** Row of the box
+        :return:
+        """
         global box_selected, highlight_params
 
         LAST_CLICK_COLUMN = 1
@@ -675,16 +723,29 @@ class AIMove:
         return self.minimax_alphabeta(self.board, depth, True, float("-infinity"), float("infinity"), 0, True)
 
     def killer_heuristic(self, moves, current_depth):
+        """
+        Non Pure!
+
+        Checks whether there is a move that the current depth level that is in the saved beta cutoff moves
+        If so, set higher priority for them
+
+        :param moves: **multi-dimensional list** List of moves that are currently playable
+        :param current_depth: **int** Current depth level
+        :return:
+        """
         depth_lvl = self.depth - current_depth
         if depth_lvl in self.killermoves:
             for move in moves:
                 if move in self.killermoves[depth_lvl]:
+                    # This move was a previous beta cutoff, give it more weighting
                     move[1] = 4
 
     def quiescence(self, board_state, depth, MaxPlayer, alpha, beta, prev_move=0, top_tree=False):
         """
-        Implements the Minimax algorithm with fail soft alpha beta pruning for calculating AI decisions
-        This function is recursively called and tries to mimic simultaneous movements
+        Implements same algorithm as "minimax_alphabeta" but is only called when the main minimax tree calls this
+        function when it encounters a terminal node that may induce the "Horizon Effect"
+
+        This function returns the score if the node is "quiet" (doesn't cause material changes)
 
         :param board_state: **multi-dimensional list** Board state
         :param depth: **int** Current depth of the recursive call
@@ -704,16 +765,12 @@ class AIMove:
         current_score = self.ai_score(board_copy)
         if current_score == float("-infinity") or current_score == float("infinity") \
                 or current_score == 255 or depth == 0:
-            #print("Cut")
             # this is a leaf node, return the score
             return self.ai_score(board_copy)
         elif (MaxPlayer and len(self.possible_capture_moves(board_copy, 0)) == 0) or ((not MaxPlayer) and \
                 len(self.possible_capture_moves(board_copy, 1)) == 0):
-            #print("Amazing")
             # quiet node, return the score
             return self.ai_score(board_copy)
-
-
 
         # Revert any changes that were done to calculate the AI score
         board_copy = copy.deepcopy(board_state)
@@ -810,9 +867,7 @@ class AIMove:
             if calm_node:
                 return self.ai_score(board_copy)
             else:
-                #Try quiescence search
-                #print("Doing quiescence search")
-                #return self.ai_score(board_copy)
+                # Try quiescence search
                 # Quiescence depth is dynamic
                 pieces = self.pieces_amt(board_copy)
                 if 6 < pieces <= 8:
@@ -821,7 +876,6 @@ class AIMove:
                     quiescence_depth = 5
                 else:
                     quiescence_depth = 2
-                #print(quiescence_depth)
                 return self.quiescence(board_state, quiescence_depth, MaxPlayer, alpha, beta, prev_move)
 
 
@@ -1121,9 +1175,15 @@ class AIMove:
                                         possible_moves.append([[x, y, tempx, tempy], 0, move_output])
         return possible_moves
 
-    def pieces_amt(self, board):
+    def pieces_amt(self, current_board):
+        """
+        Returns the amount of pieces on the board
+
+        :param current_board: **multi-dimensional list** List that defines the current board state
+        :return:
+        """
         pieces = 0
-        for row in board:
+        for row in current_board:
             for column in row:
                 if column != "W":
                     pieces += 1
@@ -1163,10 +1223,11 @@ class AIMove:
 
         # Calculate general score of the board for the AI
         if len(self.possible_moves(board_state, 0)) == 0:
+            # AI has no moves
             return_val = float("-infinity")
         elif ai_pawns == 0 and player_pawns == 0:
             # stalemate, return a high value less than a win
-            # The number is not generally achievable with pawn wighting and thus works for terminal nodes
+            # This number is not generally achievable with pawn wighting and thus works for terminal nodes
             return_val = 255
         elif ai_pawns == 0:
             # the player won
@@ -1175,6 +1236,7 @@ class AIMove:
             # the ai won
             return_val = float("infinity")
         else:
+            # return the weighted heuristic
             return_val = ai_score_val-player_score
 
         return return_val
@@ -1264,6 +1326,7 @@ class AIMove:
 
         board_state[new_x][new_y] = player_val
         board_state[x][y] = "W"
+        
         # check whether we need to upgrade pawns to knights
         if new_x == 4 and player_val == "P":
             board_state[new_x][new_y] = "K"
@@ -1275,7 +1338,7 @@ class AIMove:
 
 """
 
-Board Drawing Related Functions
+Turtle Related Functions
 
 """
 
@@ -1302,7 +1365,7 @@ Piece Handler and Game Logic Functions
 """
 
 
-def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
+def move_logic(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     """
     Combines two move onto a given board state WITH drawing functionality
     Uses the rules of simultaneous movement in Apocalypse when combining the moves
@@ -1336,31 +1399,27 @@ def move_piece(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
             delete_piece(x, y)
             delete_piece(x2, y2)
         elif piece_type1 == "p" and piece_type2 == "K":
-
+            # execute move for AI and delete the player piece, it won the fight
             delete_piece(x, y)
-            # execute move for AI
             execute_move(x2, y2, new_x2, new_y2, SYMBOL_DICT[get_piece(y2, x2)])
         elif piece_type1 == "k" and piece_type2 == "P":
+            # execute move for player and delete the AI piece, it won the fight
             delete_piece(x2, y2)
             # execute move for AI
             execute_move(x, y, new_x, new_y, SYMBOL_DICT[get_piece(y, x)])
     else:
         # the pieces are moving to different locations, simultaneous movement does not matter
-
-
         # we need to save the pawn type for each value
+        
+        # Check whether they are actually making a move, if so, store the current piece symbol and code
         if x != -1:
-            player_pawn = DrawingBoard.SYMBOL_DICT[get_piece(y, x)]
+            player_piece = DrawingBoard.SYMBOL_DICT[get_piece(y, x)]
             player_code = get_piece(y, x)
+            execute_move(x, y, new_x, new_y, player_piece, player_code)
         if x2 != -1:
-            ai_pawn = DrawingBoard.SYMBOL_DICT[get_piece(y2, x2)]
+            ai_piece = DrawingBoard.SYMBOL_DICT[get_piece(y2, x2)]
             ai_code = get_piece(y2, x2)
-
-        if (x != -1):
-            execute_move(x, y, new_x, new_y, player_pawn, player_code)
-        if (x2 != -1):
-            # since this is the second move,
-            execute_move(x2, y2, new_x2, new_y2, ai_pawn, ai_code)
+            execute_move(x2, y2, new_x2, new_y2, ai_piece, ai_code)
 
 
 def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
@@ -1648,6 +1707,8 @@ def load_state():
     """
     try:
         global penalty_points, board, moveOffset, depth_amt
+        DARK_GREY = "#4A4A4A"
+
         file_obj = open("saved_board.apoc", "r")
 
         penalty_line = file_obj.readline().split(" ")
@@ -1661,7 +1722,7 @@ def load_state():
 
         # now we need to clear the screen and set the colour of it
         DrawingBoard.screen.clear()
-        DrawingBoard.screen.bgcolor("#4A4A4A")
+        DrawingBoard.screen.bgcolor(DARK_GREY)
 
         # draw out the board and penalty system
         DrawingBoard.draw_board()
@@ -1924,6 +1985,15 @@ def process_turn(row, column, current_box):
 
 
 def process_movements(ai_val, player_validity, row, column):
+    """
+    Processes penalty logic for the moves, if they don't have a penalty, move the corresponding pieces
+
+    :param ai_val: **multi-dimensional list** Defines the move that the AI decided to make (False if no move)
+    :param player_validity: **bool** Whether the player's move is true or not
+    :param row: **int** row of the click
+    :param column: **int** column of the click
+    :return:
+    """
     global board
 
     LAST_CLICK_COLUMN = 1
@@ -1931,7 +2001,7 @@ def process_movements(ai_val, player_validity, row, column):
 
     if ai_val is not False and player_validity is True:
         # both made valid moves, we'll process them
-        move_piece((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), ai_val[1], ai_val[0], ai_val[3], ai_val[2])
+        move_logic((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), ai_val[1], ai_val[0], ai_val[3], ai_val[2])
     elif ai_val is False and player_validity is False:
         print("AI and Player Penalty")
         DrawingBoard.message_queue("Player Penalty")
@@ -1943,15 +2013,24 @@ def process_movements(ai_val, player_validity, row, column):
         print("AI Penalty")
         DrawingBoard.message_queue("AI Penalty")
         board = penalty_add("a")
-        move_piece((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), -1, 0, 0, 0)
+        move_logic((highlight_params[LAST_CLICK_COLUMN] - 1), (highlight_params[LAST_CLICK_ROW] - 1), (column - 1), (row - 1), -1, 0, 0, 0)
     elif player_validity is False:
         print("Player Penalty")
         DrawingBoard.message_queue("Player Penalty")
         board = penalty_add("p")
-        move_piece(-1, 0, 0, 0, ai_val[1], ai_val[0], ai_val[3], ai_val[2])
+        move_logic(-1, 0, 0, 0, ai_val[1], ai_val[0], ai_val[3], ai_val[2])
 
 
 def redeploy_player_pawn(current_box, row, column):
+    """
+    When a pawn gets to the last rank, if they have 2 or more knights, have to redeploy to a vacant square
+    This function creates the orange box and applies proper logic
+
+    :param current_box:
+    :param row:
+    :param column:
+    :return:
+    """
     global highlight_params, box_selected
 
     HIGHLIGHT_TURTLE = 0
@@ -2088,12 +2167,15 @@ def play_sound(sound_file):
     :param sound_file: **string** name of the sound to play
     :return:
     """
-    if platform.system() == "Windows":
-        winsound.PlaySound(sound_file, winsound.SND_FILENAME)
-    elif platform.system() == "Darwin":
-        os.system("afplay " + sound_file + "&")
-    else:
-        print("Sounds not supported")
+    try:
+        if platform.system() == "Windows":
+            winsound.PlaySound(sound_file, winsound.SND_FILENAME)
+        elif platform.system() == "Darwin":
+            os.system("afplay " + sound_file + "&")
+        else:
+            print("Sounds not supported")
+    except:
+        print("Error playing sound")
 
 
 def print_board():

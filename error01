@@ -1,0 +1,39 @@
+Checking whether it is game over or not
+Drawing button with text Main Menu
+Board:
+['W', 'W', 'W', 'W', 'W']
+['W', 'W', 'W', 'W', 'W']
+['W', 'K', 'W', 'W', 'W']
+['W', 'k', 'W', 'W', 'p']
+['W', 'p', 'W', 'p', 'k']
+Drawing button with text New Game
+Drawing button with text Load Game
+Exception in Tkinter callback
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/tkinter/__init__.py", line 1549, in __call__
+    return self.func(*args)
+  File "/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/turtle.py", line 675, in eventfun
+    fun(x, y)
+  File "task10.py", line 2190, in button_event
+    button.execute_function()
+  File "task10.py", line 709, in execute_function
+    exec(self.function)
+  File "<string>", line 1, in <module>
+  File "task10.py", line 1799, in load_state
+    depth_amt = int(file_obj.readline())
+ValueError: invalid literal for int() with base 10: 'W W k W W\n'
+Exception in Tkinter callback
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/tkinter/__init__.py", line 1549, in __call__
+    return self.func(*args)
+  File "/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/turtle.py", line 675, in eventfun
+    fun(x, y)
+  File "task10.py", line 2190, in button_event
+    button.execute_function()
+  File "task10.py", line 709, in execute_function
+    exec(self.function)
+  File "<string>", line 1, in <module>
+  File "task10.py", line 1799, in load_state
+    depth_amt = int(file_obj.readline())
+ValueError: invalid literal for int() with base 10: 'W W k W W\n'
+h132-189:code OZ$ 

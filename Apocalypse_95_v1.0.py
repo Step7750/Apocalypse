@@ -6,9 +6,9 @@ Play the game of Apocalypse! A simultaneous game based upon the principles of ch
 
 Rules:
 
-The starting setup is as shown. Horsemen and footmen move and capture the same as knights and pawns in chess,
-except footmen do not have a double-step option on their first move. For each turn, each player secretly writes
-down his move, then the players simultaneously declare them. The following rules apply:
+Horsemen and footmen move and capture the same as knights and pawns in chess,
+except footmen do not have a double-step option on their first move. For each turn, player moves are performed 
+simultaenously. The following rules apply:
 
 If they moved to the same square, a horseman captures a footman. Same-type pieces are both removed from the board.
 If a capture was declared using a footman, but the piece to be captured moved from its square, the footman move still
@@ -17,6 +17,7 @@ If a declared move is illegal, the player incurs a penalty point.
 A footman promotes to horseman when reaching the last rank, but only when the player has less than two horsemen.
 Otherwise the player must redeploy the footman to any vacant square.
 
+A player wins by being first to eliminate all of the opponent's footmen. Accumulating two penalty points forfeits the game. A stalemate is a draw.
 [Wikipedia - https://en.wikipedia.org/wiki/Apocalypse_(chess_variant)]
 
 

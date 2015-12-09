@@ -17,7 +17,9 @@ If a declared move is illegal, the player incurs a penalty point.
 A footman promotes to horseman when reaching the last rank, but only when the player has less than two horsemen.
 Otherwise the player must redeploy the footman to any vacant square.
 
-A player wins by being first to eliminate all of the opponent's footmen. Accumulating two penalty points forfeits the game. A stalemate is a draw.
+A player wins by being first to eliminate all of the opponent's footmen. Accumulating two penalty points forfeits 
+the game. A stalemate is a draw.
+
 [Wikipedia - https://en.wikipedia.org/wiki/Apocalypse_(chess_variant)]
 
 

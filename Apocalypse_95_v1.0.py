@@ -3,27 +3,7 @@ CPSC 231 Group Project - Apocalypse 095
 
 Play the game of Apocalypse! A simultaneous game based upon the principles of chess.
 
-
-Rules:
-
-Horsemen and footmen move and capture the same as knights and pawns in chess,
-except footmen do not have a double-step option on their first move. For each turn, player moves are performed 
-simultaenously. The following rules apply:
-
-If they moved to the same square, a horseman captures a footman. Same-type pieces are both removed from the board.
-If a capture was declared using a footman, but the piece to be captured moved from its square, the footman move still
-stands. (The move converts to a diagonal step instead of a capture.)
-If a declared move is illegal, the player incurs a penalty point.
-A footman promotes to horseman when reaching the last rank, but only when the player has less than two horsemen.
-Otherwise the player must redeploy the footman to any vacant square.
-
-A player wins by being first to eliminate all of the opponent's footmen. Accumulating two penalty points forfeits 
-the game. A stalemate is a draw.
-
-[Wikipedia - https://en.wikipedia.org/wiki/Apocalypse_(chess_variant)]
-
-
-----------------------------------
+The rules can be found here: https://en.wikipedia.org/wiki/Apocalypse_(chess_variant)
 
 
 The program functions are neatly divided into different sections to define different areas of the program.
@@ -122,7 +102,7 @@ class BoardDraw:
     the OS configuration
     """
 
-    # X, Y coords for each board box (to make our lives easier for onclick events)
+    # X, Y coordinates for each board box (to make our lives easier for onclick events)
     box_locations = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
                      [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
                      [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
@@ -172,7 +152,7 @@ class BoardDraw:
         self.MessagesTurtle._tracer(False)
         self.MessagesTurtle.hideturtle()
 
-        # for proper scaling for relative values, if the height is less than the width, go based off of that
+        # for proper scaling for relative values, if the height is less than the width, go based upon the height
         if self.screen.window_height() < self.screen.window_width():
             self.scaling_value = self.screen.window_height()
 
@@ -190,7 +170,7 @@ class BoardDraw:
         else:
             self.TEXT_HEIGHT = int(self.BOARD_DIMENSION/7.5)
             self.PENALTY_TEXT_HEIGHT = int(self.BOARD_DIMENSION/45)
-            
+
         # creates the move offset that is needed to increment by everytime a new message is printed
         # (creates extra var to save it)
         self.moveOffset = self.BOARD_DIMENSION/2 - (self.TEXT_HEIGHT/0.7) - (self.PENALTY_TEXT_HEIGHT * 1.5)
@@ -339,7 +319,7 @@ class BoardDraw:
                 char_turtle = create_default_turtle()
                 char_turtle.setx(main_board.xcor() + (self.BOARD_DIMENSION/10))
 
-                # get symbol from dict
+                # get symbol from dictionary
                 text_to_write = self.SYMBOL_DICT[get_piece(row, column)]
 
                 # mac osx and windows have different symbol designs, with diff height/width
@@ -377,7 +357,7 @@ class BoardDraw:
 
     def penalty_count(self):
         """
-        Draws out the penalty points display on the right of the board
+        Draws out the penalty points display on the top-right of the board
 
         :return:
         """
@@ -520,7 +500,7 @@ class BoardDraw:
 
     def choose_difficulty(self):
         """
-        Clears and draws the difficulty screen
+        Clears the main screen and draws the difficulty screen
 
         :return:
         """
@@ -588,13 +568,15 @@ class BoardDraw:
         New_Highlight_Turtle.up()
         New_Highlight_Turtle.goto(current_box[X_COORD], current_box[Y_COORD])
         New_Highlight_Turtle.down()
-        for i2 in range(4):
+
+        for counter in range(4):
             New_Highlight_Turtle.forward(self.BOARD_DIMENSION/5)
             New_Highlight_Turtle.right(90)
+
         New_Highlight_Turtle.up()
         box_selected = 1
 
-        # save x y coords from the turtle for future reference
+        # save x y coordinates from the turtle for future reference
         highlight_params[LAST_CLICK_COLUMN] = column
         highlight_params[LAST_CLICK_ROW] = row
 
@@ -673,7 +655,6 @@ class Button:
         self.button_turtle.begin_fill()
         for i in range(4):
             if i % 2 == 0:
-                # even num
                 self.button_turtle.forward(self.width)
             else:
                 self.button_turtle.forward(self.height)
@@ -970,6 +951,7 @@ class AIMove:
 
                     if current_depth_lvl not in self.killermoves:
                         self.killermoves[current_depth_lvl] = []
+
                     self.killermoves[current_depth_lvl].append(clean_move)
 
                     break
@@ -1028,7 +1010,7 @@ class AIMove:
 
                     for move in knight_moves:
                         if 0 <= (x + move[0]) < 5 and 0 <= (y + move[1]) < 5:
-                            # it is inside the board
+                            # it the move inside the board
                             if player_type == 0:
                                 if board_state[x+move[0]][y+move[1]] != "P" and board_state[x+move[0]][y+move[1]] != "K":
                                     # valid AI move for the knight, return it
@@ -1052,7 +1034,7 @@ class AIMove:
 
                 elif (piece_type == "P" and player_type == 0) or (piece_type == "p" and player_type == 1):
 
-                    # offset of rows is down for the AI
+                    # offset of rows is down for the AI pawns
                     if piece_type == "P":
                         offset_val = x + 1
                     else:
@@ -1066,9 +1048,9 @@ class AIMove:
 
                     valid_move_val = False
                     move_vals = []
-                    # check going diagonally right
+                    # check if going diagonally-right
                     if 0 <= offset_val < 5 and 0 <= (y + 1) < 5:
-                        # it is within the constraints of the board, check whether there is an enemy there
+                        # it is within the constraints of the board, check whether there is an enemy at that location
                         if player_type == 0:
                             if board_state[offset_val][(y + 1)] == "k" or board_state[offset_val][(y + 1)] == "p":
                                 if movement_upgrade:
@@ -1090,7 +1072,7 @@ class AIMove:
                                     valid_move_val = True
                                     move_vals.append([x, y, offset_val, (y + 1)])
                     if 0 <= offset_val < 5 and 0 <= (y - 1) < 5:
-                        # it is within the constraints of the board, check whether there is an enemy there
+                        # it is within the constraints of the board, check whether there is an enemy at that location
                         if player_type == 0:
                             if board_state[offset_val][(y - 1)] == "k" or board_state[offset_val][(y - 1)] == "p":
                                 if movement_upgrade:
@@ -1190,7 +1172,7 @@ class AIMove:
 
                     valid_move_val = False
                     move_vals = []
-                    # check going diagonally right
+                    # check going if diagonally-right
                     if 0 <= offset_val < 5 and 0 <= (y + 1) < 5:
                         # it is within the constraints of the board, check whether there is an enemy there
                         if player_type == 0:
@@ -1315,7 +1297,7 @@ class AIMove:
 
     def combine_moves(self, board_state_val, x, y, new_x, new_y, x2, y2, new_x2, new_y2):
         """
-        Combines two move onto a given board state without any drawing functionality
+        Combines two moves onto a given board state without any drawing functionality
         Uses the rules of simultaneous movement in Apocalypse when combining the moves
 
         :param board_state_val: **multi-dimensional list** Board state
@@ -1399,7 +1381,7 @@ class AIMove:
 
         board_state[new_x][new_y] = player_val
         board_state[x][y] = "W"
-        
+
         # check whether we need to upgrade pawns to knights
         if new_x == 4 and player_val == "P":
             board_state[new_x][new_y] = "K"
@@ -1483,7 +1465,7 @@ def move_logic(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
     else:
         # the pieces are moving to different locations, simultaneous movement does not matter
         # we need to save the pawn type for each value
-        
+
         # Check whether they are actually making a move, if so, store the current piece symbol and code
         if x != -1:
             player_piece = DrawingBoard.SYMBOL_DICT[get_piece(y, x)]
@@ -1559,7 +1541,7 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
 
 def valid_move(x, y, newx, newy, playername):
     """
-    Checks whether a given move is valid or not for playername
+    Checks whether a given move is valid or not for 'playername'
 
     :param x: **int** current piece x coord
     :param y: **int** current piece y coord
@@ -1580,7 +1562,7 @@ def valid_move(x, y, newx, newy, playername):
         piece_type = get_piece(x, y)
         new_piece_type = get_piece(newx, newy)
 
-        # Check if its a knight
+        # Check if it's a knight
         if piece_type.lower() == "k":
             if (piece_type == "k" and playername == "p") or (piece_type == "K" and playername == "a"):
                 # make sure they own that piece
@@ -1643,7 +1625,7 @@ def delete_piece(x, y):
     # get the turtle at x, y
     cur_turtle = DrawingBoard.board_turtles[y][x]
 
-    # set the state of the board at that location to W
+    # set the state of the board at that location to 'W'
     set_piece(y, x, "W")
 
     # clear any symbols in that location

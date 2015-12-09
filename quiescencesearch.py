@@ -1265,6 +1265,7 @@ class AIMove:
         player_val = board_state[x][y]
         ai_val = board_state[x2][y2]
 
+        # Pieces are moving to the same location, process them differently (with simultaneous movement)
         if new_x == new_x2 and new_y == new_y2:
 
             piece_type1 = board_state[x][y]
@@ -1277,7 +1278,7 @@ class AIMove:
                 board_state[y][x] = "W"
                 board_state[x2][y2] = "W"
             elif piece_type1 == "p" and piece_type2 == "K":
-
+                # Destroy pawn, keep knight
                 board_state[x][y] = "W"
                 # execute move for AI
                 board_state[new_x2][new_y2] = board_state[y2][x2]
@@ -1450,7 +1451,8 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
     set_piece(new_y, new_x, piece_code)
 
 
-    # check the saved symbol is the same as the current piece on the board at that location, make sure we don't delete it
+    # check the saved symbol is the same as the current piece on the
+    # board at that location, make sure we don't delete it
     test_symbol = DrawingBoard.SYMBOL_DICT[get_piece(y, x)]
     if test_symbol == symbol and force_delete == 3:
         # the other player did not move into our old location, we can delete whatever is there
@@ -1465,13 +1467,13 @@ def execute_move(x, y, new_x, new_y, symbol, piece_code=-1, force_delete=3):
     # clear the turtle (in case there is a written piece there) at the desired position
     new_turtle.clear()
 
-    # write out the piece symbol centered in the block in ariel font with a size of the block height/width
 
+    # write out the piece symbol centered in the block in ariel font with a size of the block height/width
     if platform.system() == "Windows" or platform.system() == "Linux":
         # adjust scaling of the y coord based upon the os
         new_turtle.write(symbol, False, align="center", font=("Ariel", int(DrawingBoard.BOARD_DIMENSION/5.5)))
     else:
-        # haven't tested on a Unix system other than Mac OSX, Linux may have a different character set
+        # Seems to have proper scaling on Mac OSX systems
         new_turtle.write(symbol, False, align="center", font=("Ariel", int(DrawingBoard.BOARD_DIMENSION/5)))
 
     # display the move on the right display
@@ -1709,6 +1711,7 @@ def load_state():
 
     :return:
     """
+
     try:
         global penalty_points, board, moveOffset, depth_amt
         DARK_GREY = "#4A4A4A"
@@ -1743,7 +1746,7 @@ def load_state():
         moveOffset = (DrawingBoard.BOARD_DIMENSION/2) - (DrawingBoard.TEXT_HEIGHT/0.7) - (DrawingBoard.PENALTY_TEXT_HEIGHT * 1.5)
         DrawingBoard.message_queue("Loaded Board")
         file_obj.close()
-    except:
+    except IOError:
         print("There was an error loading the board")
         DrawingBoard.message_queue("Error Loading")
 
@@ -1767,7 +1770,7 @@ def save_state():
             file_obj.write(line_to_write)
             DrawingBoard.message_queue("Saved Board")
             file_obj.close()
-        except:
+        except IOError:
             print("There was an error saving the board")
             message_queue("Error Saving")
 

@@ -1475,12 +1475,12 @@ def move_logic(x, y, new_x, new_y, x2, y2, new_x2, new_y2):
         elif piece_type1 == "p" and piece_type2 == "K":
             # execute move for AI and delete the player piece, it won the fight
             delete_piece(x, y)
-            execute_move(x2, y2, new_x2, new_y2, SYMBOL_DICT[get_piece(y2, x2)])
+            execute_move(x2, y2, new_x2, new_y2, DrawingBoard.SYMBOL_DICT[get_piece(y2, x2)])
         elif piece_type1 == "k" and piece_type2 == "P":
             # execute move for player and delete the AI piece, it won the fight
             delete_piece(x2, y2)
             # execute move for AI
-            execute_move(x, y, new_x, new_y, SYMBOL_DICT[get_piece(y, x)])
+            execute_move(x, y, new_x, new_y, DrawingBoard.SYMBOL_DICT[get_piece(y, x)])
     else:
         # the pieces are moving to different locations, simultaneous movement does not matter
         # we need to save the pawn type for each value

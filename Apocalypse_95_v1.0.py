@@ -1854,7 +1854,7 @@ def save_state():
             file_obj.close()
         except IOError:
             print("There was an error saving the board")
-            message_queue("Error Saving")
+            DrawingBoard.message_queue("Error Saving")
 
 
 """
